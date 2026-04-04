@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="咪宝农场"/>
+  <meta name="theme-color" content="#2d1b0e"/>
+  <title>咪宝农场</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon.svg"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #2d1b0e; overflow-x: hidden; }
+    #root { min-height: 100vh; }
+    /* iOS safe area */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      #root { padding-bottom: env(safe-area-inset-bottom); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <!-- React + Babel via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-type="module">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+const CROPS = [
+// ===== 春季 SPRING (s01–s25) =====
+{id:"s01",name:"小圆草莓",emoji:"🍓",r:"normal",se:"spring",w:4,s:3,f:2,m:1,o:0,sell:50,cost:20,desc:"春天最早熟的小甜心"},
+{id:"s02",name:"胖萝卜",emoji:"🥕",r:"normal",se:"spring",w:3,s:2,f:3,m:2,o:0,sell:50,cost:20,desc:"圆滚滚的白萝卜"},
+{id:"s03",name:"嫩豌豆荚",emoji:"🫛",r:"normal",se:"spring",w:2,s:4,f:2,m:1,o:1,sell:55,cost:22,desc:"整齐的小豆子"},
+{id:"s04",name:"花椰菜球",emoji:"🥦",r:"normal",se:"spring",w:3,s:2,f:4,m:1,o:0,sell:50,cost:20,desc:"白白胖胖像云朵"},
+{id:"s05",name:"樱花萝卜",emoji:"🌸",r:"normal",se:"spring",w:4,s:4,f:2,m:1,o:0,sell:60,cost:25,desc:"粉红色小水萝卜"},
+{id:"s06",name:"春生菜",emoji:"🥬",r:"normal",se:"spring",w:3,s:3,f:3,m:2,o:0,sell:60,cost:25,desc:"叶子嫩得能透光"},
+{id:"s07",name:"小土豆",emoji:"🥔",r:"normal",se:"spring",w:4,s:2,f:2,m:2,o:2,sell:70,cost:28,desc:"攥在手心刚好"},
+{id:"s08",name:"蒜宝宝",emoji:"🧄",r:"normal",se:"spring",w:3,s:3,f:2,m:2,o:2,sell:70,cost:28,desc:"每瓣都饱满"},
+{id:"s09",name:"防风草",emoji:"🌾",r:"normal",se:"spring",w:3,s:3,f:3,m:2,o:2,sell:80,cost:32,desc:"炖汤特别甜"},
+{id:"s10",name:"春洋葱",emoji:"🧅",r:"normal",se:"spring",w:4,s:4,f:3,m:2,o:1,sell:90,cost:36,desc:"刚冒出土很精神"},
+{id:"s11",name:"红宝石樱桃",emoji:"🍒",r:"rare",se:"spring",w:6,s:4,f:4,m:4,o:2,sell:150,cost:60,desc:"红得像小宝石",stk:5},
+{id:"s12",name:"紫芦笋",emoji:"🌿",r:"rare",se:"spring",w:7,s:3,f:5,m:3,o:2,sell:160,cost:65,desc:"笔直挺拔",stk:5},
+{id:"s13",name:"郁金香花束",emoji:"🌷",r:"rare",se:"spring",w:5,s:5,f:5,m:5,o:2,sell:180,cost:72,desc:"一颗开出一整束",stk:4},
+{id:"s14",name:"蓝铃花",emoji:"🔔",r:"rare",se:"spring",w:4,s:3,f:7,m:5,o:3,sell:180,cost:72,desc:"蓝色铃铛海",stk:4},
+{id:"s15",name:"蜜糖胡萝卜",emoji:"🥕",r:"rare",se:"spring",w:6,s:5,f:4,m:6,o:3,sell:200,cost:80,desc:"甜三倍",stk:4},
+{id:"s16",name:"菠菜王",emoji:"🥬",r:"rare",se:"spring",w:7,s:5,f:5,m:4,o:4,sell:220,cost:88,desc:"比手掌还大",stk:3},
+{id:"s17",name:"咖啡豆",emoji:"☕",r:"rare",se:"spring",w:8,s:4,f:5,m:5,o:5,sell:260,cost:100,desc:"满农场咖啡香",stk:3},
+{id:"s18",name:"大黄茎",emoji:"🪴",r:"rare",se:"spring",w:7,s:4,f:7,m:5,o:5,sell:280,cost:110,desc:"酸甜茎秆",stk:3},
+{id:"s19",name:"千层酥之树",emoji:"🌳",r:"epic",se:"spring",w:12,s:8,f:10,m:6,o:4,sell:400,cost:0,desc:"树皮是酥皮层"},
+{id:"s20",name:"极光玫瑰",emoji:"🌹",r:"epic",se:"spring",w:10,s:8,f:8,m:10,o:6,sell:450,cost:0,desc:"花瓣如极光"},
+{id:"s21",name:"蜂巢甜瓜王",emoji:"🍈",r:"epic",se:"spring",w:12,s:10,f:8,m:6,o:8,sell:500,cost:0,desc:"蜂巢结构装满蜜"},
+{id:"s22",name:"梦境紫藤",emoji:"💜",r:"epic",se:"spring",w:8,s:6,f:12,m:12,o:8,sell:550,cost:0,desc:"听到风铃声"},
+{id:"s23",name:"银河草莓塔",emoji:"⭐",r:"epic",se:"spring",w:14,s:10,f:10,m:10,o:10,sell:750,cost:0,desc:"顶上有星星在亮"},
+{id:"s24",name:"春神的第一朵花",emoji:"🌺",r:"legend",se:"spring",w:20,s:16,f:18,m:14,o:12,sell:1500,cost:0,desc:"耐心的人才等到它开花"},
+{id:"s25",name:"时间果实",emoji:"🔮",r:"legend",se:"spring",w:22,s:18,f:16,m:16,o:16,sell:2000,cost:0,desc:"回到最喜欢的那个下午"},
+// ===== 夏季 SUMMER =====
+{id:"su01",name:"小红番茄",emoji:"🍅",r:"normal",se:"summer",w:3,s:4,f:2,m:1,o:0,sell:50,cost:20,desc:"一串一串挂在藤上，摘下来还带着太阳的温度"},
+{id:"su02",name:"迷你西瓜",emoji:"🍉",r:"normal",se:"summer",w:4,s:3,f:2,m:1,o:0,sell:50,cost:20,desc:"巴掌大的小西瓜，切开是最正的红"},
+{id:"su03",name:"圆茄子",emoji:"🍆",r:"normal",se:"summer",w:2,s:4,f:3,m:1,o:0,sell:55,cost:22,desc:"紫得发亮的小圆茄，皮薄肉嫩"},
+{id:"su04",name:"甜玉米",emoji:"🌽",r:"normal",se:"summer",w:3,s:4,f:2,m:0,o:1,sell:50,cost:20,desc:"掰开叶子金灿灿的一整排，生吃就很甜"},
+{id:"su05",name:"小青椒",emoji:"🫑",r:"normal",se:"summer",w:3,s:4,f:2,m:1,o:1,sell:60,cost:25,desc:"翠绿的小灯笼，微微辣"},
+{id:"su06",name:"脆黄瓜",emoji:"🥒",r:"normal",se:"summer",w:4,s:3,f:2,m:2,o:0,sell:60,cost:25,desc:"刚从藤上摘下来，咬一口满嘴清凉"},
+{id:"su07",name:"水蜜桃",emoji:"🍑",r:"normal",se:"summer",w:4,s:3,f:2,m:2,o:1,sell:70,cost:28,desc:"毛绒绒的表皮，汁水多到要用手接"},
+{id:"su08",name:"向日葵",emoji:"🌻",r:"normal",se:"summer",w:3,s:5,f:2,m:1,o:1,sell:70,cost:28,desc:"永远转向太阳的大脸花，瓜子也能吃"},
+{id:"su09",name:"嫩秋葵",emoji:"🥝",r:"normal",se:"summer",w:3,s:4,f:3,m:1,o:2,sell:80,cost:32,desc:"毛茸茸的小绿角，切开是星星形状"},
+{id:"su10",name:"红辣椒",emoji:"🌶️",r:"normal",se:"summer",w:3,s:5,f:3,m:1,o:2,sell:90,cost:36,desc:"挂在枝头红得像小鞭炮"},
+{id:"su11",name:"哈密瓜",emoji:"🍈",r:"rare",se:"summer",w:6,s:5,f:4,m:3,o:2,sell:150,cost:60,desc:"网纹细密的瓜，切开满屋蜜香",stk:5},
+{id:"su12",name:"金芒果",emoji:"🥭",r:"rare",se:"summer",w:5,s:6,f:4,m:3,o:2,sell:160,cost:65,desc:"熟透的芒果金黄欲滴，果肉像丝绒",stk:5},
+{id:"su13",name:"罗勒香草",emoji:"🌿",r:"rare",se:"summer",w:5,s:5,f:6,m:4,o:2,sell:180,cost:72,desc:"摘一片叶子整个手都是香的",stk:5},
+{id:"su14",name:"薄荷丛",emoji:"🍃",r:"rare",se:"summer",w:4,s:4,f:6,m:5,o:3,sell:180,cost:72,desc:"生命力极强的一丛凉意",stk:4},
+{id:"su15",name:"蓝莓串",emoji:"🫐",r:"rare",se:"summer",w:6,s:5,f:5,m:5,o:3,sell:200,cost:80,desc:"越晒越甜的深蓝浆果",stk:4},
+{id:"su16",name:"红宝石甜菜",emoji:"💎",r:"rare",se:"summer",w:6,s:5,f:5,m:4,o:5,sell:220,cost:88,desc:"切开是同心圆纹路",stk:4},
+{id:"su17",name:"啤酒花",emoji:"🍺",r:"rare",se:"summer",w:7,s:6,f:5,m:4,o:5,sell:260,cost:100,desc:"爬满棚架的绿色小松果",stk:3},
+{id:"su18",name:"巨型南瓜",emoji:"🎃",r:"rare",se:"summer",w:7,s:5,f:6,m:5,o:5,sell:280,cost:110,desc:"比你头还大的橘色南瓜",stk:3},
+{id:"su19",name:"焰心火龙果",emoji:"🐉",r:"epic",se:"summer",w:10,s:12,f:8,m:6,o:4,sell:400,cost:0,desc:"果肉是流动的岩浆色"},
+{id:"su20",name:"琥珀蜜瓜",emoji:"🍯",r:"epic",se:"summer",w:10,s:10,f:8,m:8,o:6,sell:450,cost:0,desc:"整颗瓜是半透明的琥珀色"},
+{id:"su21",name:"太阳花冠",emoji:"👑",r:"epic",se:"summer",w:12,s:12,f:6,m:6,o:8,sell:500,cost:0,desc:"花盘是纯金色的圆环"},
+{id:"su22",name:"焦糖熔岩树",emoji:"🌋",r:"epic",se:"summer",w:8,s:10,f:10,m:10,o:8,sell:550,cost:0,desc:"树干里流淌着焦糖浆"},
+{id:"su23",name:"星火辣椒王",emoji:"🔥",r:"epic",se:"summer",w:12,s:14,f:10,m:8,o:10,sell:750,cost:0,desc:"辣椒尖端不断冒出微小火星"},
+{id:"su24",name:"永昼之果",emoji:"☀️",r:"legend",se:"summer",w:18,s:22,f:16,m:12,o:12,sell:1500,cost:0,desc:"太阳舍不得落山就是因为这颗果实"},
+{id:"su25",name:"盛夏的最后一场雨",emoji:"⛈️",r:"legend",se:"summer",w:16,s:20,f:16,m:18,o:16,sell:2000,cost:0,desc:"透明外壳里困着一场微型雷阵雨"},
+// ===== 秋季 AUTUMN =====
+{id:"au01",name:"小南瓜",emoji:"🎃",r:"normal",se:"autumn",w:3,s:3,f:3,m:1,o:0,sell:50,cost:20,desc:"橘红色的小胖墩"},
+{id:"au02",name:"红薯",emoji:"🍠",r:"normal",se:"autumn",w:3,s:2,f:3,m:1,o:1,sell:50,cost:20,desc:"烤一烤就流蜜"},
+{id:"au03",name:"板栗",emoji:"🌰",r:"normal",se:"autumn",w:2,s:3,f:3,m:1,o:1,sell:55,cost:22,desc:"刺壳里躲着三颗油亮的小家伙"},
+{id:"au04",name:"柿子",emoji:"🍊",r:"normal",se:"autumn",w:3,s:3,f:2,m:2,o:0,sell:50,cost:20,desc:"软柿子甜到心里"},
+{id:"au05",name:"山药",emoji:"🥖",r:"normal",se:"autumn",w:3,s:2,f:3,m:2,o:1,sell:60,cost:25,desc:"黏黏糊糊但很补"},
+{id:"au06",name:"秋葵花",emoji:"🌼",r:"normal",se:"autumn",w:3,s:4,f:2,m:2,o:0,sell:60,cost:25,desc:"金黄色开一天就谢"},
+{id:"au07",name:"白萝卜",emoji:"🥕",r:"normal",se:"autumn",w:4,s:2,f:3,m:2,o:1,sell:70,cost:28,desc:"炖汤是一绝"},
+{id:"au08",name:"莲藕",emoji:"🪷",r:"normal",se:"autumn",w:4,s:2,f:2,m:3,o:1,sell:70,cost:28,desc:"孔洞排列整齐的白胖藕节"},
+{id:"au09",name:"大白菜",emoji:"🥬",r:"normal",se:"autumn",w:3,s:3,f:3,m:2,o:2,sell:80,cost:32,desc:"越冷越甜"},
+{id:"au10",name:"小米穗",emoji:"🌾",r:"normal",se:"autumn",w:4,s:3,f:3,m:2,o:2,sell:90,cost:36,desc:"沉甸甸弯下腰的金色穗子"},
+{id:"au11",name:"紫葡萄",emoji:"🍇",r:"rare",se:"autumn",w:5,s:5,f:4,m:4,o:2,sell:150,cost:60,desc:"颗颗饱满挂着白霜",stk:5},
+{id:"au12",name:"红苹果",emoji:"🍎",r:"rare",se:"autumn",w:5,s:5,f:5,m:3,o:2,sell:160,cost:65,desc:"咬一口脆得能听见",stk:5},
+{id:"au13",name:"蔓越莓",emoji:"🫐",r:"rare",se:"autumn",w:5,s:4,f:5,m:5,o:3,sell:180,cost:72,desc:"酸酸甜甜的小红珠",stk:5},
+{id:"au14",name:"松茸",emoji:"🍄",r:"rare",se:"autumn",w:3,s:3,f:7,m:6,o:3,sell:180,cost:72,desc:"香气浓郁的珍贵菌菇",stk:4},
+{id:"au15",name:"桂花",emoji:"🏵️",r:"rare",se:"autumn",w:5,s:4,f:5,m:6,o:4,sell:200,cost:80,desc:"香飘整个农场",stk:4},
+{id:"au16",name:"秋梨",emoji:"🍐",r:"rare",se:"autumn",w:6,s:4,f:6,m:5,o:4,sell:220,cost:88,desc:"炖冰糖最润",stk:4},
+{id:"au17",name:"洋蓟",emoji:"🪻",r:"rare",se:"autumn",w:6,s:5,f:6,m:4,o:6,sell:260,cost:100,desc:"一瓣一瓣剥着吃",stk:3},
+{id:"au18",name:"香菇王",emoji:"🍄‍🟫",r:"rare",se:"autumn",w:5,s:4,f:8,m:6,o:5,sell:280,cost:110,desc:"晒干更香",stk:3},
+{id:"au19",name:"琥珀枫糖果",emoji:"🍁",r:"epic",se:"autumn",w:10,s:8,f:10,m:8,o:4,sell:400,cost:0,desc:"外壳是凝固的琥珀色枫糖"},
+{id:"au20",name:"万叶之书",emoji:"📖",r:"epic",se:"autumn",w:8,s:6,f:12,m:10,o:6,sell:450,cost:0,desc:"每片叶子上显现着不同的字迹"},
+{id:"au21",name:"月见银杏",emoji:"🌕",r:"epic",se:"autumn",w:8,s:8,f:8,m:12,o:8,sell:500,cost:0,desc:"只在满月夜变成纯银色"},
+{id:"au22",name:"丰收螺旋藤",emoji:"🌀",r:"epic",se:"autumn",w:10,s:8,f:12,m:8,o:8,sell:550,cost:0,desc:"每一圈结不同的果实"},
+{id:"au23",name:"千年松露",emoji:"💫",r:"epic",se:"autumn",w:12,s:8,f:14,m:10,o:10,sell:750,cost:0,desc:"纹路像年轮每圈代表一百年"},
+{id:"au24",name:"最后一片不肯落的叶子",emoji:"🍂",r:"legend",se:"autumn",w:16,s:14,f:20,m:16,o:14,sell:1500,cost:0,desc:"风怎么吹都不掉，金红色在说再等一下"},
+{id:"au25",name:"记忆酿造果",emoji:"🍷",r:"legend",se:"autumn",w:18,s:14,f:18,m:18,o:18,sell:2000,cost:0,desc:"每个人喝到的是最想念的那顿饭"},
+// ===== 冬季 WINTER =====
+{id:"w01",name:"雪里蕻",emoji:"🥬",r:"normal",se:"winter",w:3,s:1,f:3,m:2,o:1,sell:50,cost:20,desc:"雪盖着也绿油油的"},
+{id:"w02",name:"冬笋",emoji:"🎋",r:"normal",se:"winter",w:2,s:1,f:3,m:3,o:1,sell:50,cost:20,desc:"鲜得眉毛掉下来"},
+{id:"w03",name:"荠菜",emoji:"🌿",r:"normal",se:"winter",w:3,s:2,f:2,m:2,o:1,sell:55,cost:22,desc:"包馄饨是一绝"},
+{id:"w04",name:"金橘",emoji:"🍊",r:"normal",se:"winter",w:3,s:2,f:2,m:2,o:1,sell:50,cost:20,desc:"连皮吃酸酸甜甜"},
+{id:"w05",name:"甘蔗段",emoji:"🍬",r:"normal",se:"winter",w:4,s:2,f:2,m:1,o:1,sell:60,cost:25,desc:"咬开一节甜水就涌出来"},
+{id:"w06",name:"腊梅枝",emoji:"✿",r:"normal",se:"winter",w:2,s:2,f:3,m:3,o:1,sell:60,cost:25,desc:"零下也照开不误"},
+{id:"w07",name:"冬枣",emoji:"🫒",r:"normal",se:"winter",w:3,s:2,f:2,m:2,o:2,sell:70,cost:28,desc:"脆甜脆甜停不下来"},
+{id:"w08",name:"芋头",emoji:"🥔",r:"normal",se:"winter",w:3,s:1,f:3,m:3,o:2,sell:70,cost:28,desc:"蒸熟了粉粉糯糯"},
+{id:"w09",name:"冻梨",emoji:"🍐",r:"normal",se:"winter",w:4,s:1,f:3,m:2,o:3,sell:80,cost:32,desc:"用凉水缓出冰碴子才最好吃"},
+{id:"w10",name:"松子",emoji:"🌰",r:"normal",se:"winter",w:2,s:2,f:3,m:3,o:3,sell:90,cost:36,desc:"粒粒饱满喷香"},
+{id:"w11",name:"雪莲花",emoji:"❄️",r:"rare",se:"winter",w:4,s:3,f:5,m:5,o:3,sell:150,cost:60,desc:"花瓣是半透明的冰蓝色",stk:5},
+{id:"w12",name:"黑松露",emoji:"🍄",r:"rare",se:"winter",w:3,s:2,f:6,m:6,o:3,sell:160,cost:65,desc:"只有最灵的鼻子才找得到",stk:5},
+{id:"w13",name:"冰糖葫芦串",emoji:"🍡",r:"rare",se:"winter",w:5,s:3,f:4,m:5,o:5,sell:180,cost:72,desc:"糖衣凝成琥珀色咬一口嘎嘣脆",stk:5},
+{id:"w14",name:"白茶芽",emoji:"🍵",r:"rare",se:"winter",w:4,s:3,f:5,m:6,o:4,sell:180,cost:72,desc:"泡出来是淡淡的蜜香",stk:4},
+{id:"w15",name:"血橙",emoji:"🍊",r:"rare",se:"winter",w:5,s:4,f:4,m:5,o:4,sell:200,cost:80,desc:"深红色果肉像冬天傍晚的天空",stk:4},
+{id:"w16",name:"霜柿饼",emoji:"🟠",r:"rare",se:"winter",w:4,s:3,f:6,m:6,o:5,sell:220,cost:88,desc:"软糯到拉出长长的丝",stk:4},
+{id:"w17",name:"水仙花球",emoji:"🌼",r:"rare",se:"winter",w:6,s:3,f:5,m:6,o:5,sell:260,cost:100,desc:"清水养着就能开",stk:3},
+{id:"w18",name:"天山雪蒜",emoji:"🧄",r:"rare",se:"winter",w:5,s:3,f:6,m:6,o:6,sell:280,cost:110,desc:"在雪山上长了三年的独头蒜",stk:3},
+{id:"w19",name:"冰晶莲",emoji:"🪷",r:"epic",se:"winter",w:8,s:4,f:12,m:10,o:6,sell:400,cost:0,desc:"握在手里不化，微微发暖"},
+{id:"w20",name:"极夜浆果",emoji:"🫐",r:"epic",se:"winter",w:10,s:4,f:8,m:12,o:8,sell:450,cost:0,desc:"只在极夜里结果，吃一颗不怕黑"},
+{id:"w21",name:"雪人南瓜",emoji:"⛄",r:"epic",se:"winter",w:8,s:6,f:10,m:10,o:10,sell:500,cost:0,desc:"长成雪人形状，对它笑一下会歪头"},
+{id:"w22",name:"永冻蜜",emoji:"🍯",r:"epic",se:"winter",w:10,s:4,f:10,m:12,o:10,sell:550,cost:0,desc:"一万年的蜜，金色永远不会凝固"},
+{id:"w23",name:"北极星之种",emoji:"⭐",r:"epic",se:"winter",w:10,s:6,f:12,m:12,o:14,sell:750,cost:0,desc:"种下去长出一颗永远指北的小星星"},
+{id:"w24",name:"第一场雪的记忆",emoji:"🌨️",r:"legend",se:"winter",w:16,s:10,f:16,m:20,o:18,sell:1500,cost:0,desc:"装着你人生中第一次看见雪的那个早晨"},
+{id:"w25",name:"冬眠之心",emoji:"💎",r:"legend",se:"winter",w:14,s:12,f:18,m:20,o:20,sell:2000,cost:0,desc:"吃下去可以做一个很长很温暖的梦"},
+];
+
+// ===== 隐藏作物 HIDDEN CROPS =====
+const HIDDEN_CROPS = [
+// 连续打卡线 - 自媒体
+{id:"h_w7",name:"灵感小蘑菇",emoji:"🍄",r:"rare",se:"any",w:10,s:3,f:4,m:3,o:2,sell:200,cost:0,desc:"连续创作七天后从键盘缝隙里冒出来的小菌菇，帽子上浮着省略号",hidden:true,unlock:{type:"streak",cat:"water",days:7}},
+{id:"h_w14",name:"故事藤蔓",emoji:"🌿",r:"epic",se:"any",w:16,s:6,f:10,m:6,o:4,sell:500,cost:0,desc:"藤蔓自动编织成一段段文字，每次看到的句子都不一样",hidden:true,unlock:{type:"streak",cat:"water",days:14}},
+{id:"h_w21",name:"万赞金苹果",emoji:"🍎",r:"epic",se:"any",w:18,s:8,f:12,m:8,o:6,sell:700,cost:0,desc:"金灿灿的苹果表面天然浮现一个【赞】的形状，据说它知道什么内容会火",hidden:true,unlock:{type:"streak",cat:"water",days:21}},
+{id:"h_w30",name:"缪斯之泪",emoji:"💧",r:"legend",se:"any",w:22,s:12,f:18,m:14,o:14,sell:1800,cost:0,desc:"一颗透明的水滴状果实，里面装着一整个还没被写出来的故事。摇晃它能听到很模糊的人声，像有人在念一篇你还没写的文章。",hidden:true,unlock:{type:"streak",cat:"water",days:30}},
+// 连续打卡线 - 运动
+{id:"h_s7",name:"棉花糖哑铃草",emoji:"🏋️",r:"rare",se:"any",w:3,s:10,f:4,m:3,o:2,sell:200,cost:0,desc:"长得像迷你哑铃的软乎乎植物，捏一下会弹回来",hidden:true,unlock:{type:"streak",cat:"sun",days:7}},
+{id:"h_s14",name:"蜜桃弹力果",emoji:"🍑",r:"epic",se:"any",w:6,s:16,f:8,m:6,o:6,sell:500,cost:0,desc:"弹性极好的蜜桃色果实，从桌上掉下去能弹到天花板",hidden:true,unlock:{type:"streak",cat:"sun",days:14}},
+{id:"h_s21",name:"汗水琉璃花",emoji:"🌈",r:"epic",se:"any",w:6,s:20,f:10,m:8,o:8,sell:700,cost:0,desc:"花瓣是凝固的汗珠形状，在阳光下折射出彩虹，越运动它越亮",hidden:true,unlock:{type:"streak",cat:"sun",days:21}},
+{id:"h_s30",name:"不倒翁向阳花",emoji:"🌸",r:"legend",se:"any",w:12,s:24,f:14,m:14,o:16,sell:1800,cost:0,desc:"怎么推都不会倒的一株花，根扎得比任何植物都深。风吹雨打它就晃一晃，然后直回来。花朵永远朝上。",hidden:true,unlock:{type:"streak",cat:"sun",days:30}},
+// 连续打卡线 - 阅读
+{id:"h_f7",name:"书签草",emoji:"📑",r:"rare",se:"any",w:3,s:3,f:10,m:4,o:2,sell:200,cost:0,desc:"叶子又薄又长，天然适合夹在书里，而且会记住你读到哪一页",hidden:true,unlock:{type:"streak",cat:"fertilizer",days:7}},
+{id:"h_f14",name:"墨水浆果",emoji:"🫐",r:"epic",se:"any",w:6,s:6,f:16,m:8,o:6,sell:500,cost:0,desc:"深蓝色的浆果，捏破了流出来的是墨水，写出来的字特别好看",hidden:true,unlock:{type:"streak",cat:"fertilizer",days:14}},
+{id:"h_f21",name:"图书馆大树",emoji:"📚",r:"epic",se:"any",w:8,s:6,f:20,m:10,o:8,sell:700,cost:0,desc:"每片叶子上写着一句不同的话，有的是诗，有的是定理，有的是某个人的日记",hidden:true,unlock:{type:"streak",cat:"fertilizer",days:21}},
+{id:"h_f30",name:"通晓之果",emoji:"🍀",r:"legend",se:"any",w:14,s:10,f:24,m:16,o:16,sell:1800,cost:0,desc:"外形平平无奇的暗绿色果实。据说吃一口不会变聪明，但会突然看懂一本你以前怎么都读不进去的书。",hidden:true,unlock:{type:"streak",cat:"fertilizer",days:30}},
+// 连续打卡线 - 作息
+{id:"h_m7",name:"晚安薰衣草",emoji:"💜",r:"rare",se:"any",w:3,s:2,f:4,m:10,o:3,sell:200,cost:0,desc:"放在枕头边就能闻到的安神薰衣草，连做梦都是紫色的",hidden:true,unlock:{type:"streak",cat:"moon",days:7}},
+{id:"h_m14",name:"月牙枕头花",emoji:"🌙",r:"epic",se:"any",w:6,s:4,f:8,m:18,o:6,sell:500,cost:0,desc:"花苞是弯弯的月牙形状，天黑了自动打开，天亮了合上",hidden:true,unlock:{type:"streak",cat:"moon",days:14}},
+{id:"h_m21",name:"星光被子草",emoji:"✨",r:"epic",se:"any",w:8,s:6,f:8,m:22,o:8,sell:700,cost:0,desc:"叶子铺开像一张小毯子，表面浮着缓慢移动的星星光点",hidden:true,unlock:{type:"streak",cat:"moon",days:21}},
+{id:"h_m30",name:"好梦酿造壶",emoji:"🏺",r:"legend",se:"any",w:12,s:10,f:14,m:28,o:16,sell:1800,cost:0,desc:"从土里长出来的一个陶壶。壶盖微微打开，里面飘出来的雾气闻一下就打哈欠。它酿的是你睡得最好的那一晚的整晚梦境，可以重复做。",hidden:true,unlock:{type:"streak",cat:"moon",days:30}},
+// 连续打卡线 - 现实事务
+{id:"h_o7",name:"铜齿轮花",emoji:"⚙️",r:"rare",se:"any",w:3,s:3,f:3,m:3,o:10,sell:200,cost:0,desc:"花瓣是小小的铜色齿轮，风吹过会咔哒咔哒转",hidden:true,unlock:{type:"streak",cat:"ore",days:7}},
+{id:"h_o14",name:"合同卷轴藤",emoji:"📜",r:"epic",se:"any",w:6,s:6,f:6,m:6,o:18,sell:500,cost:0,desc:"结出来的果实是卷起来的微型卷轴，展开里面写着【任务完成】",hidden:true,unlock:{type:"streak",cat:"ore",days:14}},
+{id:"h_o21",name:"印章石榴",emoji:"🔏",r:"epic",se:"any",w:8,s:8,f:8,m:8,o:20,sell:700,cost:0,desc:"每颗石榴籽上刻着不同的印章图案",hidden:true,unlock:{type:"streak",cat:"ore",days:21}},
+{id:"h_o30",name:"大人的勋章树",emoji:"🏅",r:"legend",se:"any",w:14,s:14,f:14,m:14,o:24,sell:1800,cost:0,desc:"树上挂的不是果实，是一枚一枚小小的勋章。每枚勋章背面刻着一件你本来不想做但还是做完了的事。",hidden:true,unlock:{type:"streak",cat:"ore",days:30}},
+// NPC专属
+{id:"h_npc_kim",name:"月狼铃兰",emoji:"🌙",r:"legend",se:"any",w:14,s:10,f:14,m:24,o:20,sell:0,nosell:true,cost:0,desc:"只在冬夜开放的铃兰，花瓣边缘是银色的，像被月光浸过。据说它只会长在一个特定的人走过的脚印里。Kim把种子给你的时候没有说话，只是看了你很久。",hidden:true,unlock:{type:"npc",npc:"Kim"}},
+{id:"h_npc_lucas",name:"千面狐火果",emoji:"🦊",r:"legend",se:"any",w:18,s:12,f:18,m:16,o:18,sell:0,nosell:true,cost:0,desc:"每次收获果实颜色都不同，像Lucas的表情一样你永远猜不透。但不管什么颜色，切开里面都是一样的甜。他说『这是我唯一不骗你的东西』。",hidden:true,unlock:{type:"npc",npc:"Lucas"}},
+{id:"h_npc_leon",name:"金鬃向日葵",emoji:"🦁",r:"legend",se:"any",w:14,s:22,f:14,m:16,o:16,sell:0,nosell:true,cost:0,desc:"很大很大的一朵向日葵，安安静静开在角落。Leon把种子放在你手心的时候手抖了一下，然后说了句『嗯……种种看』就跑了。",hidden:true,unlock:{type:"npc",npc:"Leon"}},
+{id:"h_npc_ethan",name:"蜕皮蔷薇",emoji:"🌹",r:"legend",se:"any",w:18,s:10,f:22,m:16,o:16,sell:0,nosell:true,cost:0,desc:"花瓣会一层一层自动剥落，然后从花心重新长出新的一层。Ethan给你的时候说『这株比我诚实』，你没听懂，但后来好像懂了。",hidden:true,unlock:{type:"npc",npc:"Ethan"}},
+// 彩蛋种子
+{id:"h_egg1",name:"彩虹棒棒糖花",emoji:"🍭",r:"epic",se:"any",w:10,s:10,f:10,m:10,o:10,sell:600,cost:0,desc:"花茎是白色的棍子，顶端是旋转彩虹色的圆形花朵，看着看着就开心了",hidden:true,unlock:{type:"egg",key:"rainbow"}},
+{id:"h_egg2",name:"新手的骄傲草",emoji:"🌱",r:"rare",se:"any",w:8,s:8,f:8,m:8,o:8,sell:400,cost:0,desc:"一株挺直腰板的小草，明明很普通但就是有一种『你看我多厉害』的气质",hidden:true,unlock:{type:"egg",key:"first_legend"}},
+{id:"h_egg3",name:"丰收花环",emoji:"🌿",r:"epic",se:"any",w:12,s:12,f:12,m:12,o:12,sell:800,cost:0,desc:"直接长成花环形状，上面挂着该季节所有普通作物的迷你版",hidden:true,unlock:{type:"egg",key:"season_complete"}},
+{id:"h_egg4",name:"咪宝的礼物花",emoji:"🐱",r:"epic",se:"any",w:10,s:10,f:10,m:14,o:8,sell:0,nosell:true,cost:0,desc:"咪宝某天早上嘴里叼着的种子，你没见过，它也说不清从哪来的。种出来的花长得像一只蜷着的小猫",hidden:true,unlock:{type:"egg",key:"60min_7days"}},
+{id:"h_egg5",name:"友谊常春藤",emoji:"🌿",r:"epic",se:"any",w:12,s:10,f:14,m:10,o:10,sell:0,nosell:true,cost:0,desc:"藤蔓自动长成四股编织在一起的形状，四股颜色分别对应四个角色的代表色",hidden:true,unlock:{type:"egg",key:"all_npc"}},
+{id:"h_egg6",name:"金币树苗",emoji:"🌳",r:"rare",se:"any",w:8,s:6,f:6,m:4,o:16,sell:500,cost:0,desc:"叶子是小金币形状的摇钱树，收获时直接给金币不给作物",hidden:true,unlock:{type:"egg",key:"gold_10000"}},
+{id:"h_egg7",name:"收藏家之花",emoji:"🌺",r:"legend",se:"any",w:18,s:16,f:18,m:18,o:18,sell:0,nosell:true,cost:0,desc:"花瓣上刻着你图鉴里每一样东西的微缩图案，随着图鉴继续填满花瓣还会继续长出来。",hidden:true,unlock:{type:"egg",key:"col_50"}},
+{id:"h_egg8",name:"周年纪念树",emoji:"🎄",r:"legend",se:"any",w:20,s:20,f:20,m:20,o:20,sell:0,nosell:true,cost:0,desc:"一年四季都在变化的树，永远不落叶。树干上刻着一个小小的『1』。明年它会变成『2』。",hidden:true,unlock:{type:"egg",key:"one_year"}},
+];
+
+const ALL_CROPS = [...CROPS, ...HIDDEN_CROPS];
+
+const CATS = [
+{ id: "water", name: "自媒体", icon: "💧", color: "#4A90D9", bg: "#E8F4FD" },
+{ id: "sun", name: "运动", icon: "☀️", color: "#E8A838", bg: "#FFF8E1" },
+{ id: "fertilizer", name: "阅读", icon: "🌿", color: "#5BA55B", bg: "#E8F5E9" },
+{ id: "moon", name: "作息", icon: "🌙", color: "#7E57C2", bg: "#F3E5F5" },
+{ id: "ore", name: "现实事务", icon: "⛏️", color: "#8D6E63", bg: "#EFEBE9" },
+];
+
+const NK = ["w","s","f","m","o"];
+const NI = { w:"💧",s:"☀️",f:"🌿",m:"🌙",o:"⛏️" };
+const NM = { w:"water",s:"sun",f:"fertilizer",m:"moon",o:"ore" };
+const RC = { normal:"#78909C",rare:"#42A5F5",epic:"#AB47BC",legend:"#FFB300" };
+const RN = { normal:"普通",rare:"稀有",epic:"史诗",legend:"传说" };
+const RBG = { normal:"#ECEFF1",rare:"#E3F2FD",epic:"#F3E5F5",legend:"#FFF8E1" };
+const SN = { spring:"春",summer:"夏",autumn:"秋",winter:"冬" };
+const SCOL = { spring:"#F8BBD0",summer:"#FFCC02",autumn:"#FF8A65",winter:"#B3E5FC" };
+const RET = { normal:0.3,rare:0.15,epic:0.05,legend:0 };
+const SDROP = CROPS.filter(c=>c.r==="normal"||c.r==="rare");
+const CAT_KEY = { water:"w",sun:"s",fertilizer:"f",moon:"m",ore:"o" };
+
+// ===== NPC DATA =====
+const NPCS = [
+  {
+    id:"Kim", name:"Kim", tribe:"狼族", emoji:"🐺", color:"#5C6BC0", bg:"#E8EAF6",
+    location:"西边深林铁匠铺", job:"铁匠·猎人",
+    loveItems:["w18","w11","w12","au18","au14"], // 大黄茎、雪莲花、黑松露、香菇王、松茸
+    hateItems:["s01","s11","s05"], // 草莓类太甜腻
+    loveSeasons:["winter","autumn"],
+    heartRate: "slow_then_fast", // 前慢后快
+    color2:"#3949AB",
+    dialogues:{
+      0:["……","……你来这儿做什么。"],
+      1:["把东西放下就走。","刀还没修完。"],
+      2:["嗯。","……来了。","火候不对，等一下。"],
+      3:["你送的那个，还过得去。","……在忙。你自己找地方坐。"],
+      4:["……你怎么又来了。","没想到你会一直来。","刀磨好了，要看吗。"],
+      5:["你来了。","今天猎到了一只雪兔，带走一半？","……还以为你不会来了。"],
+      6:["昨天你没来。","你知道这里冬天有多冷吗。你还是来了。","……坐近一点，炉子这边暖和。"],
+      7:["今天下雪了。我以为你不会出门。","你来了我就放心了。","……说什么傻话，我就是想知道你没事。"],
+      8:["你去哪儿我就去哪儿。","……这把刀给你，我亲手打的。别弄丢。","不许走那么快。"],
+      9:["昨晚我守着炉子想了很久。","……我不擅长说这些。但你知道的。","别让我等太久。"],
+      10:["你是我见过最烦人的人。","……也是唯一让我想守着的。","留下来。"]
+    },
+    giftDialogue:{
+      love:["……收下了。","这个……谢谢。","你怎么知道我喜欢这个。"],
+      like:["嗯，还行。","……放那儿吧。"],
+      hate:["……这种东西。","你拿回去。太甜了。"],
+      normal:["收下了。","……谢谢。"]
+    },
+    advice: null,
+    specialMechanic:"前5心好感涨幅-30%，5心后每次互动双倍好感"
+  },
+  {
+    id:"Leon", name:"Leon", tribe:"狮族", emoji:"🦁", color:"#F57C00", bg:"#FFF3E0",
+    location:"村子中心广场酒馆", job:"酒馆老板",
+    loveItems:["au01","au02","au03","au04","au10"], // 秋季普通作物
+    hateItems:[], // 没有特别讨厌的
+    loveSeasons:["autumn","summer"],
+    heartRate: "fast", // 热情好接触
+    color2:"#E65100",
+    dialogues:{
+      0:["……你好。","来坐。要喝点什么。"],
+      1:["今天……嗯，好。你好。","来了。要热的吗。"],
+      2:["上次你说的那个事，我想了很久，好像……嗯，有道理。","来，给你倒热茶。"],
+      3:["你来了。","今天……嗯，今天天气挺好的。我说这个……对，想说的就是这个。","酒馆里有你喜欢的那个，留着呢。"],
+      4:["你好久没来了。","嗯……我不太会说，但是……感觉少了什么。","来，坐这里。"],
+      5:["你来的时候我就想起，有件事要告诉你……忘了。","反正……来了就好。","给你留了最好的那瓶。"],
+      6:["我做了一个汤，你喝不喝……我不知道好不好喝，但我做了。","你不用非要夸我。","……你说好喝我就信了。"],
+      7:["上次你帮我搬东西，我一直想谢谢你。","……谢谢。","嗯就这样。谢谢。"],
+      8:["你坐在这里我就安心。","……说不出来，就是那种感觉。","你要走了吗？再坐一会儿。"],
+      9:["我昨天梦到你来酒馆了。","……醒来发现没有，就有点，嗯。","今天你真的来了。挺好的。"],
+      10:["你以后……可不可以，每天都来。","我不会说花的。就是想你在。","……你答应了啊。"]
+    },
+    giftDialogue:{
+      love:["……好吃。真的好吃。","谢谢你，我……很喜欢。","嗯！"],
+      like:["谢谢你。","……挺好的。"],
+      hate:[],
+      normal:["谢谢。","……收下了。"]
+    },
+    advice: null,
+    specialMechanic:"好感涨幅最快，最容易接近"
+  },
+  {
+    id:"Lucas", name:"Lucas", tribe:"狐族", emoji:"🦊", color:"#E8A838", bg:"#FFF8E1",
+    location:"东边河岸杂货铺", job:"商人·情报贩子",
+    loveItems:["au11","au12","au16","s11","s13"], // 紫葡萄、红苹果、秋梨、红宝石樱桃、郁金香
+    hateItems:["w01","au10","s09"], // 矿石养分重的普通作物
+    loveSeasons:["autumn","spring"],
+    heartRate: "medium_task", // 中等+任务加速
+    color2:"#C77D00",
+    dialogues:{
+      0:["欢迎欢迎，本店什么都有哦～","你好你好，第一次来？"],
+      1:["哎，又来了，要买什么？","最近有新货，要看看吗～"],
+      2:["你是个挺有眼光的人嘛。","我这里的东西，一般人可看不懂它好在哪里。"],
+      3:["说起来，你这块地最近种了什么？我可是有点好奇的。","你送我的那个……嗯，我就说你会挑东西。"],
+      4:["跟你说个秘密——算了，下次再说。","……你要是好奇的话，可以请我喝杯茶。"],
+      5:["你知道吗，我见过很多人，但你是少数……嗯，说起来有点奇怪。算了。","今天有个任务，做不做？"],
+      6:["我不轻易相信人的。","……但你嘛，算半个例外。","半个啊，别得意。"],
+      7:["帮我去找一样东西？找到了我告诉你一个关于这个村子的秘密。","……放心，我的情报从来不出错。"],
+      8:["你每次来我都知道。","……我没有盯着你啊，就是、习惯了。","别多想。"],
+      9:["我不是那种会说的人。","但有些事不说出来……会憋着。","就是，你对我来说不一样。就这样。"],
+      10:["你是我唯一、真正信任的人。","……千面狐火果，我只给你一颗。","切开看看，今天是什么颜色。"]
+    },
+    giftDialogue:{
+      love:["哎哟，你真的懂我。","……我承认，我有点开心。","这个我收了，不找零。"],
+      like:["嗯，不错嘛。","收下了。"],
+      hate:["……这么粗糙的东西？","拿走，不谢。"],
+      normal:["嗯，谢谢。","收到了。"]
+    },
+    advice: null,
+    specialMechanic:"有随机任务系统，完成任务额外+2好感",
+    tasks:[
+      {id:"t1",desc:"帮我找3个秋季普通作物",check:(d)=>["au01","au02","au03","au04","au05","au06","au07","au08","au09","au10"].filter(id=>(d.crops[id]||0)>0).length>=3,reward:2},
+      {id:"t2",desc:"种出任意一个稀有作物",check:(d)=>Object.keys(d.col).some(id=>{const c=gc(id);return c&&c.r==="rare";}),reward:2},
+      {id:"t3",desc:"连续专注3天",check:(d)=>Math.max(...Object.values(d.streaks||{}))>=3,reward:2},
+      {id:"t4",desc:"攒够200金",check:(d)=>d.gold>=200,reward:3},
+      {id:"t5",desc:"收获5种不同作物",check:(d)=>Object.keys(d.crops).length>=5,reward:3},
+    ]
+  },
+  {
+    id:"Ethan", name:"Ethan", tribe:"蛇族", emoji:"🐍", color:"#388E3C", bg:"#E8F5E9",
+    location:"南边沼泽温室", job:"炼药师·植物学家",
+    loveItems:["s01","s03","s05","s06","s13"], // 春季作物+多属性
+    hateItems:["w01","w02","w07","au10"], // 单属性简单作物
+    loveSeasons:["spring"],
+    heartRate: "very_slow", // 最慢
+    color2:"#2E7D32",
+    dialogues:{
+      0:["……你是谁。","这里不接待访客。"],
+      1:["……进来吧，别踩那盆春生菜。","有事吗。"],
+      2:["你种的那个……还不错，比我预期的好。","……嗯，是夸你。"],
+      3:["你的农场土壤比较偏碱，适合春季作物。","……不用谢，我只是说一个事实。"],
+      4:["你最近种的那个配比有点问题，水养分给多了。","……我说这些不是在批评你，是帮你。","算了，你懂就行。"],
+      5:["我观察你种地很久了。","……不是监视，是研究，明白吗。","你有些直觉是对的。"],
+      6:["我做了一个新药膳配方，需要一些春季作物。","……你有的话，能给我一些吗。","这是第一次我主动开口。"],
+      7:["你知道蜕皮蔷薇吗，每次蜕皮颜色都不同。","……我觉得这比我诚实。","算了，你不一定懂我在说什么。"],
+      8:["我的温室里有一个位置，我一直空着。","……没有什么特别的意思。","或者，有一点点意思。"],
+      9:["我不擅长接近人。","……你是第一个让我觉得，靠近了也不那么难受的。","这是很罕见的事。"],
+      10:["你来温室找我，每次我都知道。","……我假装在忙，但其实是在等你说话。","蜕皮蔷薇的种子，给你。我留了很久。"]
+    },
+    giftDialogue:{
+      love:["……这个配比很有趣。","你懂植物。","我会好好研究它的。"],
+      like:["嗯，谢谢。","……收下了。"],
+      hate:["太单一了。","……这种东西没有研究价值。"],
+      normal:["……谢谢。","收到。"]
+    },
+    advice:[
+      "你的农场水养分过剩，试试减少💧多补☀️。",
+      "春季的多属性作物值得优先种，生长效率更高。",
+      "稀有种子的肥料需求偏高，需要均衡施肥。",
+      "冬季作物耐寒但需要更多🌙月养分。",
+      "你最近收获的那批，品质不错，继续保持。",
+      "传说作物不是靠时间，是靠养分配比的精确度。",
+    ],
+    specialMechanic:"每次互动有1/3概率触发种植建议"
+  },
+];
+
+const NPC_GIFT_HEART = { love:3, like:1, normal:1, hate:-1 };
+const KIM_SLOW_THRESHOLD = 5; // 前5心涨幅减半
+
+const gc = (id) => ALL_CROPS.find(c=>c.id===id);
+const tn = (c) => c.w+c.s+c.f+c.m+c.o;
+const fmt = (sec) => String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+const td = () => new Date().toISOString().slice(0,10);
+const pprog = (p) => {
+  if(!p.crop) return 0;
+  const c = gc(p.crop);
+  if(!c) return 0;
+  return NK.reduce((a,k)=>a+Math.min(p.fed[k]||0,c[k]),0)/tn(c);
+};
+
+const DEF = () => ({
+  gameDate:{year:1,season:"spring",day:1}, todaySlots:0,
+  nutrients:{water:0,sun:0,fertilizer:0,moon:0,ore:0}, gold:100,
+  sessions:[], streaks:{water:0,sun:0,fertilizer:0,moon:0,ore:0},
+  lastSD:{water:null,sun:null,fertilizer:null,moon:null,ore:null},
+  seeds:{}, crops:{}, col:{}, totalGoldEarned:0,
+  npcHearts:{Kim:0,Lucas:0,Leon:0,Ethan:0},
+  npcGiftedToday:{Kim:false,Lucas:false,Leon:false,Ethan:false},
+  npcDialogueIdx:{Kim:0,Lucas:0,Leon:0,Ethan:0},
+  lucasTaskIdx:0, lucasTaskDone:false,
+  plots:[{crop:null},{crop:null},{crop:null},{crop:null}], shopStock:{},
+  unlockedHidden:{}, eggFlags:{},
+});
+
+const iSS = (d) => {
+  const st={};
+  CROPS.filter(c=>c.stk&&c.se===d.gameDate.season).forEach(c=>{st[c.id]=c.stk;});
+  return {...d,shopStock:st};
+};
+
+const LD = () => {
+  try {
+    const r=localStorage.getItem("mibao_v4");
+    if(r){const d={...DEF(),...JSON.parse(r)};return Object.keys(d.shopStock).length?d:iSS(d);}
+  } catch(e){}
+  return iSS(DEF());
+};
+const SV = (d) => { try{localStorage.setItem("mibao_v4",JSON.stringify(d));}catch(e){} };
+
+// Check hidden unlocks
+const checkHiddenUnlocks = (d) => {
+  const newUnlocked = {...d.unlockedHidden};
+  let changed = false;
+  HIDDEN_CROPS.forEach(hc => {
+    if(newUnlocked[hc.id]) return;
+    const u = hc.unlock;
+    if(u.type==="streak") {
+      if((d.streaks[u.cat]||0)>=u.days) { newUnlocked[hc.id]=true; changed=true; }
+    } else if(u.type==="npc") {
+      if((d.npcHearts[u.npc]||0)>=5) { newUnlocked[hc.id]=true; changed=true; }
+    } else if(u.type==="egg") {
+      if(d.eggFlags && d.eggFlags[u.key]) { newUnlocked[hc.id]=true; changed=true; }
+    }
+  });
+  if(changed) return {...d,unlockedHidden:newUnlocked};
+  return d;
+};
+
+const MBT = {idle:"咪宝在等你…",washing:"咪宝在洗脸",sleeping:"咪宝睡着了 zzZ",waking:"咪宝伸懒腰",done:"咪宝冲你眨眼！",quit:"咪宝歪头看你…",drop:""};
+const MBA = {idle:"ani-idle",washing:"ani-wash",sleeping:"ani-sleep",waking:"ani-idle",done:"ani-blink",quit:"ani-sad",drop:"ani-drop"};
+
+// ── Pixel art helpers ──
+const S=5; // pixel size
+// Decode "x,y,colorKey|..." format into pixel arrays
+function dec(str,C){return str.split("|").map(s=>{const[x,y,c]=s.split(",");return[+x,+y,C[c]];})}
+
+function PixelCat({state="idle",itemEmoji=null}){
+  const C={dk:"#444",md:"#777",lt:"#aaa",cr:"#f0ddb0",pk:"#ff8899",bl:"#222",wh:"#fff",rd:"#cc2020",yw:"#f0c040"};
+  // Compact cat body encoding
+  const catBase="2,0,dk|3,0,dk|10,0,dk|11,0,dk|1,1,dk|2,1,md|3,1,cr|4,1,dk|9,1,dk|10,1,cr|11,1,md|12,1,dk|1,2,dk|2,2,md|3,2,md|4,2,md|5,2,dk|8,2,dk|9,2,md|10,2,md|11,2,md|12,2,dk|0,3,dk|1,3,md|2,3,md|3,3,md|4,3,md|5,3,md|6,3,dk|7,3,dk|8,3,md|9,3,md|10,3,md|11,3,md|12,3,md|13,3,dk|0,4,dk|1,4,md|2,4,md|3,4,md|4,4,md|5,4,md|6,4,md|7,4,md|8,4,md|9,4,md|10,4,md|11,4,md|12,4,md|13,4,dk|0,6,dk|1,6,md|2,6,cr|3,6,cr|4,6,cr|5,6,cr|6,6,cr|7,6,cr|8,6,cr|9,6,cr|10,6,cr|11,6,cr|12,6,md|13,6,dk|0,7,dk|1,7,md|2,7,cr|3,7,cr|4,7,cr|5,7,cr|6,7,pk|7,7,cr|8,7,cr|9,7,cr|10,7,cr|11,7,cr|12,7,md|13,7,dk|0,8,dk|1,8,md|2,8,cr|3,8,cr|4,8,cr|5,8,cr|6,8,cr|7,8,cr|8,8,cr|9,8,cr|10,8,cr|11,8,cr|12,8,md|13,8,dk|0,9,dk|1,9,md|2,9,md|3,9,md|4,9,md|5,9,md|6,9,md|7,9,md|8,9,md|9,9,md|10,9,md|11,9,md|12,9,md|13,9,dk|1,10,dk|2,10,dk|3,10,md|4,10,md|5,10,md|6,10,md|7,10,md|8,10,md|9,10,md|10,10,md|11,10,dk|12,10,dk";
+  const eyeOpen="0,5,dk|1,5,md|2,5,md|3,5,bl|4,5,bl|5,5,md|6,5,md|7,5,md|8,5,md|9,5,bl|10,5,bl|11,5,md|12,5,md|13,5,dk|3,4,wh|9,4,wh";
+  const eyeSleep="0,5,dk|1,5,md|2,5,md|3,5,dk|4,5,md|5,5,md|6,5,md|7,5,md|8,5,md|9,5,md|10,5,dk|11,5,md|12,5,md|13,5,dk";
+  const eyeSad="0,5,dk|1,5,md|2,5,md|3,5,dk|4,5,md|5,5,dk|6,5,md|7,5,md|8,5,dk|9,5,md|10,5,dk|11,5,md|12,5,md|13,5,dk";
+  const eyeStr=state==="sleeping"||state==="waking"?eyeSleep:state==="quit"?eyeSad:eyeOpen;
+  const catPixels=[...dec(catBase,C),...dec(eyeStr,C)];
+
+  // Bubble content by state
+  const bubFrame="2,0,bl|3,0,bl|4,0,bl|5,0,bl|6,0,bl|7,0,bl|8,0,bl|9,0,bl|1,1,bl|10,1,bl|0,2,bl|11,2,bl|0,3,bl|11,3,bl|0,4,bl|11,4,bl|0,5,bl|11,5,bl|1,6,bl|10,6,bl|2,7,bl|3,7,bl|9,7,bl|10,7,bl|5,8,bl|6,8,bl|2,1,lt|3,1,lt|2,2,lt";
+  const bubFill=[];
+  for(let y=1;y<=6;y++)for(let x=1;x<=10;x++)bubFill.push(`${x},${y},wh`);
+  const bubBase=bubFrame+"|"+bubFill.join("|");
+  const bubContent={
+    idle:"4,2,rd|5,2,rd|6,2,rd|7,2,rd|3,3,rd|4,3,rd|5,3,yw|6,3,rd|7,3,rd|8,3,rd|3,4,rd|4,4,rd|5,4,rd|6,4,rd|7,4,rd|8,4,rd|4,5,rd|5,5,rd|6,5,rd|7,5,rd|5,6,rd|6,6,rd",
+    sleeping:"2,2,dk|3,2,dk|4,2,dk|2,3,dk|4,3,dk|2,4,dk|3,4,dk|4,4,dk|6,3,dk|7,3,dk|8,3,dk|6,4,dk|8,4,dk|6,5,dk|7,5,dk|8,5,dk",
+    done:"5,2,yw|6,2,yw|4,3,yw|5,3,yw|6,3,yw|7,3,yw|5,4,yw|6,4,yw|5,5,yw|6,5,yw",
+    quit:"4,2,lt|5,2,lt|6,2,lt|4,3,lt|5,3,lt|6,3,lt|7,3,lt|5,4,lt|6,4,lt|6,5,lt",
+    drop:"5,2,yw|6,2,yw|7,2,yw|4,3,yw|6,3,yw|8,3,yw|5,4,yw|6,4,yw|7,4,yw|5,5,yw|7,5,yw",
+    waking:"3,2,yw|4,2,yw|7,2,yw|8,2,yw|3,4,yw|4,4,yw|7,4,yw|8,4,yw",
+  };
+  const bKey=state==="washing"?"idle":state==="waking"?"waking":bubContent[state]?"":state;
+  const bubStr=bubBase+(bubContent[state]?"|"+bubContent[state]:bubContent.idle?"|"+bubContent.idle:"");
+  const bubPixels=dec(bubStr,C);
+
+  const catShadow=catPixels.map(([x,y,c])=>`${x*S}px ${y*S}px 0 ${c}`).join(",");
+  const bubShadow=bubPixels.map(([x,y,c])=>`${x*S}px ${y*S}px 0 ${c}`).join(",");
+  return(
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+      <div style={{position:"relative",width:12*S,height:9*S}}>
+        <div style={{position:"absolute",top:0,left:0,width:S,height:S,boxShadow:bubShadow}}/>
+      </div>
+      <div className={MBA[state]||"ani-idle"} style={{position:"relative",width:14*S,height:11*S}}>
+        <div style={{position:"absolute",top:0,left:0,width:S,height:S,boxShadow:catShadow}}/>
+      </div>
+      {itemEmoji&&<div style={{fontSize:14,marginTop:2}}>{itemEmoji}</div>}
+    </div>
+  );
+}
+
+function PixelNPC({npcId,size=5}){
+  const Z=size;
+  // Each NPC encoded as compact pixel string
+  const NPCD={
+    Kim:{
+      c:{a:"#3a4060",b:"#5a6080",d:"#8090b0",e:"#c0c8d8",f:"#4060d0",g:"#d0b89a",w:"#fff",k:"#111"},
+      p:"3,0,a|4,0,a|9,0,a|10,0,a|2,1,a|3,1,b|4,1,e|5,1,a|8,1,a|9,1,e|10,1,b|11,1,a|2,2,a|3,2,b|4,2,b|5,2,b|6,2,a|7,2,a|8,2,b|9,2,b|10,2,b|11,2,a|1,3,a|2,3,b|3,3,b|4,3,e|5,3,e|6,3,b|7,3,b|8,3,e|9,3,e|10,3,b|11,3,b|12,3,a|1,4,a|2,4,d|3,4,d|4,4,d|5,4,d|6,4,d|7,4,d|8,4,d|9,4,d|10,4,d|11,4,d|12,4,a|3,4,w|9,4,w|1,5,a|2,5,d|3,5,f|4,5,f|5,5,d|6,5,d|7,5,d|8,5,d|9,5,f|10,5,f|11,5,d|12,5,a|1,6,a|2,6,d|3,6,g|4,6,g|5,6,g|6,6,g|7,6,g|8,6,g|9,6,g|10,6,d|11,6,a|1,7,a|2,7,g|3,7,g|4,7,g|5,7,g|6,7,k|7,7,g|8,7,g|9,7,g|10,7,g|11,7,a|1,8,a|2,8,b|3,8,b|4,8,b|5,8,b|6,8,b|7,8,b|8,8,b|9,8,b|10,8,b|11,8,a|2,9,a|3,9,b|4,9,b|5,9,b|6,9,b|7,9,b|8,9,b|9,9,b|10,9,a"
+    },
+    Leon:{
+      c:{a:"#c08020",b:"#e0a030",d:"#f0c060",e:"#f0d0a0",f:"#804000",g:"#e07050",k:"#111",w:"#fff"},
+      p:"2,0,a|3,0,a|4,0,a|5,0,b|6,0,d|7,0,d|8,0,b|9,0,a|10,0,a|11,0,a|3,0,g|10,0,g|1,1,a|2,1,a|3,1,a|4,1,b|5,1,d|6,1,d|7,1,d|8,1,d|9,1,b|10,1,a|11,1,a|12,1,a|1,2,a|2,2,a|3,2,b|4,2,e|5,2,e|6,2,e|7,2,e|8,2,e|9,2,e|10,2,b|11,2,a|12,2,a|0,3,a|1,3,a|2,3,b|3,3,e|4,3,e|5,3,e|6,3,e|7,3,e|8,3,e|9,3,e|10,3,e|11,3,b|12,3,a|13,3,a|3,3,w|9,3,w|0,4,a|1,4,b|2,4,e|3,4,f|4,4,f|5,4,e|6,4,e|7,4,e|8,4,e|9,4,f|10,4,f|11,4,e|12,4,b|13,4,a|0,5,a|1,5,b|2,5,e|3,5,e|4,5,e|5,5,e|6,5,e|7,5,e|8,5,e|9,5,e|10,5,e|11,5,e|12,5,b|13,5,a|0,6,a|1,6,b|2,6,e|3,6,e|4,6,e|5,6,e|6,6,g|7,6,e|8,6,e|9,6,e|10,6,e|11,6,e|12,6,b|13,6,a|1,7,a|2,7,a|3,7,b|4,7,b|5,7,e|6,7,e|7,7,e|8,7,e|9,7,e|10,7,b|11,7,b|12,7,a|13,7,a|1,8,a|2,8,a|3,8,a|4,8,b|5,8,b|6,8,b|7,8,b|8,8,b|9,8,b|10,8,a|11,8,a|12,8,a"
+    },
+    Lucas:{
+      c:{a:"#c84010",b:"#e06020",d:"#f09040",e:"#f0e0c0",f:"#603010",g:"#d05050",k:"#111",w:"#fff"},
+      p:"2,0,k|3,0,a|10,0,a|11,0,k|2,1,k|3,1,b|4,1,a|9,1,a|10,1,b|11,1,k|1,2,k|2,2,a|3,2,b|4,2,d|5,2,k|8,2,k|9,2,d|10,2,b|11,2,a|12,2,k|1,3,k|2,3,b|3,3,b|4,3,b|5,3,b|6,3,a|7,3,a|8,3,b|9,3,b|10,3,b|11,3,b|12,3,k|0,4,k|1,4,b|2,4,d|3,4,d|4,4,d|5,4,d|6,4,d|7,4,d|8,4,d|9,4,d|10,4,d|11,4,d|12,4,b|13,4,k|3,4,w|9,4,w|0,5,k|1,5,b|2,5,d|3,5,f|4,5,f|5,5,d|6,5,d|7,5,d|8,5,d|9,5,f|10,5,f|11,5,d|12,5,b|13,5,k|0,6,k|1,6,b|2,6,d|3,6,e|4,6,e|5,6,e|6,6,e|7,6,e|8,6,e|9,6,e|10,6,e|11,6,d|12,6,b|13,6,k|0,7,k|1,7,b|2,7,e|3,7,e|4,7,e|5,7,e|6,7,g|7,7,e|8,7,e|9,7,e|10,7,e|11,7,e|12,7,b|13,7,k|1,8,k|2,8,b|3,8,b|4,8,b|5,8,b|6,8,b|7,8,b|8,8,b|9,8,b|10,8,b|11,8,b|12,8,k|2,9,k|3,9,k|4,9,a|5,9,a|6,9,a|7,9,a|8,9,a|9,9,a|10,9,k|11,9,k"
+    },
+    Ethan:{
+      c:{a:"#1a3020",b:"#2a5030",d:"#4a8050",e:"#60a070",f:"#90e0a0",g:"#e03030",k:"#111",w:"#fff"},
+      p:"3,0,k|4,0,b|5,0,d|6,0,d|7,0,d|8,0,d|9,0,b|10,0,k|2,1,k|3,1,b|4,1,d|5,1,e|6,1,e|7,1,e|8,1,e|9,1,d|10,1,b|11,1,k|1,2,k|2,2,b|3,2,d|4,2,e|5,2,d|6,2,d|7,2,d|8,2,d|9,2,e|10,2,d|11,2,b|12,2,k|1,3,k|2,3,b|3,3,e|4,3,d|5,3,e|6,3,e|7,3,e|8,3,e|9,3,d|10,3,e|11,3,b|12,3,k|4,3,w|9,3,w|1,4,k|2,4,b|3,4,e|4,4,f|5,4,b|6,4,e|7,4,e|8,4,b|9,4,f|10,4,e|11,4,b|12,4,k|1,5,k|2,5,b|3,5,e|4,5,e|5,5,d|6,5,e|7,5,e|8,5,d|9,5,e|10,5,e|11,5,b|12,5,k|1,6,k|2,6,a|3,6,b|4,6,e|5,6,e|6,6,b|7,6,b|8,6,e|9,6,e|10,6,b|11,6,a|12,6,k|2,7,k|3,7,b|4,7,d|5,7,d|6,7,a|7,7,a|8,7,d|9,7,d|10,7,b|11,7,k|5,8,g|6,8,g|3,8,k|4,8,b|5,8,b|6,8,b|7,8,b|8,8,b|9,8,k"
+    }
+  };
+  const npc=NPCD[npcId];
+  if(!npc) return <div style={{fontSize:20}}>{npcId==="Kim"?"🐺":npcId==="Leon"?"🦁":npcId==="Lucas"?"🦊":"🐍"}</div>;
+  const pixels=dec(npc.p,npc.c);
+  const shadow=pixels.map(([x,y,c])=>`${x*Z}px ${y*Z}px 0 ${c}`).join(",");
+  const w=Math.max(...pixels.map(([x])=>x))*Z+Z;
+  const h=Math.max(...pixels.map(([,y])=>y))*Z+Z;
+  return(
+    <div style={{position:"relative",width:w,height:h,flexShrink:0}}>
+      <div style={{position:"absolute",top:0,left:0,width:Z,height:Z,boxShadow:shadow}}/>
+    </div>
+  );
+}
+
+
+
+export default function App() {
+  const [D,setD] = useState(LD);
+  const [tab,setTab] = useState("timer");
+  const [tM,setTM] = useState("countdown");
+  const [tMin,setTMin] = useState(30);
+  const [cat,setCat] = useState("water");
+  const [tS,setTS] = useState("idle");
+  const [el,setEl] = useState(0);
+  const [mb,setMb] = useState("idle");
+  const [sN,setSN] = useState(false);
+  const [note,setNote] = useState("");
+  const [pend,setPend] = useState(null);
+  const [drp,setDrp] = useState(null);
+  const [fC,setFC] = useState("all");
+  const [sP,setSP] = useState(null);
+  const [sR,setSR] = useState("normal");
+  const [mdl,setMdl] = useState(null);
+  const [hTab,setHTab] = useState("streak");
+  const [selNPC,setSelNPC] = useState(null);
+  const [npcGiftModal,setNpcGiftModal] = useState(null);
+  const [npcMsg,setNpcMsg] = useState(null); // {npc, text, type}
+  const [ethanTip,setEthanTip] = useState(null);
+  const rf = useRef(null);
+
+  useEffect(()=>{SV(D);},[D]);
+
+  // Check egg flags
+  const checkEggFlags = useCallback((d) => {
+    const flags = {...(d.eggFlags||{})};
+    let changed = false;
+    // rainbow: 一天内集齐五种养分各≥3滴
+    const allNutrients = Object.values(d.nutrients).every(v=>v>=3);
+    if(allNutrients && !flags.rainbow){flags.rainbow=true;changed=true;}
+    // first_legend: 第一次种出任意传说作物
+    const hasLegend = Object.keys(d.col).some(id=>{ const c=gc(id); return c&&c.r==="legend"; });
+    if(hasLegend && !flags.first_legend){flags.first_legend=true;changed=true;}
+    // gold_10000
+    if((d.totalGoldEarned||0)>=10000 && !flags.gold_10000){flags.gold_10000=true;changed=true;}
+    // col_50
+    const colP = Math.round(Object.keys(d.col).length/ALL_CROPS.length*100);
+    if(colP>=50 && !flags.col_50){flags.col_50=true;changed=true;}
+    // one_year
+    if(d.gameDate.year>=2 && !flags.one_year){flags.one_year=true;changed=true;}
+    // all_npc
+    const allNpc = Object.values(d.npcHearts||{}).every(v=>v>=5);
+    if(allNpc && !flags.all_npc){flags.all_npc=true;changed=true;}
+    return changed ? {...d,eggFlags:flags} : d;
+  },[]);
+
+  const startT = () => { setTS("running");setEl(0);setMb("washing");setTimeout(()=>setMb(p=>p==="washing"?"sleeping":p),60000); };
+
+  const stopT = useCallback(()=>{
+    clearInterval(rf.current);rf.current=null;
+    const mins=Math.floor(el/60);const slots=Math.floor(mins/15);
+    if(slots<=0){setMb("quit");setTS("idle");setTimeout(()=>setMb("idle"),3000);return;}
+    const seasonDrops=CROPS.filter(c=>(c.r==="normal"||c.r==="rare")&&c.se===D.gameDate.season);
+    const crossSeasonDrops=CROPS.filter(c=>c.r==="normal"&&c.se!==D.gameDate.season);
+    const epicDrops=CROPS.filter(c=>c.r==="epic"&&c.se===D.gameDate.season);
+    let dp=null;
+    if(mins>=60){
+      const roll=Math.random();
+      if(roll<0.70){const pool=CROPS.filter(c=>c.r==="normal"&&c.se===D.gameDate.season);dp=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;}
+      else if(roll<0.92){const pool=CROPS.filter(c=>c.r==="rare"&&c.se===D.gameDate.season);dp=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;}
+      else if(roll<0.99){dp=epicDrops.length?epicDrops[Math.floor(Math.random()*epicDrops.length)]:null;}
+      else{dp=crossSeasonDrops.length?crossSeasonDrops[Math.floor(Math.random()*crossSeasonDrops.length)]:null;}
+    } else if(mins>=45&&Math.random()<0.2){
+      const pool=seasonDrops.length?seasonDrops:SDROP;
+      dp=pool[Math.floor(Math.random()*pool.length)];
+    }
+    const cc=CATS.find(c=>c.id===cat);
+    const sess={id:Date.now(),rd:new Date().toISOString(),gd:{...D.gameDate},cat,cn:cc.name,ci:cc.icon,dur:mins,slots,sid:dp?dp.id:null,sn:dp?dp.name+" "+dp.emoji:null,note:""};
+    if(dp){setMb("drop");setDrp(dp.name+" "+dp.emoji);}else setMb("done");
+    setPend(sess);setTS("completed");setNote("");setTimeout(()=>setSN(true),dp?2500:800);
+  },[el,cat,D.gameDate]);
+
+  useEffect(()=>{
+    if(tS!=="running") return;
+    rf.current=setInterval(()=>{
+      setEl(p=>{
+        const n=p+1;
+        if(tM==="countdown"&&n>=tMin*60){setTimeout(()=>stopT(),0);return tMin*60;}
+        if(Math.floor(n/60)===3) setMb("sleeping");
+        if(tM==="countdown"&&(tMin*60-n)<=120&&(tMin*60-n)>117) setMb("waking");
+        return n;
+      });
+    },1000);
+    return ()=>{if(rf.current)clearInterval(rf.current);};
+  },[tS,tM,tMin,stopT]);
+
+  const saveSess = () => {
+    if(!pend) return;
+    const s={...pend,note};
+    setD(d=>{
+      const nn={...d.nutrients};nn[cat]+=s.slots;
+      const ns={...d.seeds};if(s.sid)ns[s.sid]=(ns[s.sid]||0)+1;
+      const nst={...d.streaks};const nld={...d.lastSD};
+      const t=td();const y=new Date(Date.now()-86400000).toISOString().slice(0,10);
+      if(nld[cat]===y||nld[cat]===t){if(nld[cat]!==t)nst[cat]+=1;}else if(nld[cat]!==t)nst[cat]=1;
+      nld[cat]=t;
+      // Check 60min_7days egg: need to track this properly - simplified: if streak>=7 and this session>=60min
+      const newEggFlags={...(d.eggFlags||{})};
+      if(s.dur>=60 && (nst[cat]||0)>=7) newEggFlags.egg_60min_7days=(newEggFlags.egg_60min_7days||0)+1;
+      if(newEggFlags.egg_60min_7days>=7) newEggFlags["60min_7days"]=true;
+      let nd={...d,nutrients:nn,seeds:ns,sessions:[s,...d.sessions],todaySlots:d.todaySlots+s.slots,streaks:nst,lastSD:nld,eggFlags:newEggFlags};
+      nd=checkEggFlags(nd);
+      nd=checkHiddenUnlocks(nd);
+      // Give unlocked hidden seeds
+      const newSeeds={...nd.seeds};
+      HIDDEN_CROPS.forEach(hc=>{
+        if(nd.unlockedHidden[hc.id] && !d.unlockedHidden[hc.id]) {
+          newSeeds[hc.id]=(newSeeds[hc.id]||0)+1;
+        }
+      });
+      nd={...nd,seeds:newSeeds};
+      return nd;
+    });
+    setSN(false);setDrp(null);setPend(null);setTS("idle");setMb("idle");setEl(0);
+  };
+
+  const advDay = () => setD(d=>{
+    let {year,season,day}=d.gameDate;day+=1;
+    if(day>28){
+      day=1;
+      const si=["spring","summer","autumn","winter"].indexOf(season);
+      const newPlots=d.plots.map(p=>{
+        if(!p.crop) return p;
+        const c=gc(p.crop);
+        if(c&&c.se!=="any"&&c.se===season&&pprog(p)<1) return {crop:null};
+        return p;
+      });
+      if(si>=3){season="spring";year+=1;}else season=["spring","summer","autumn","winter"][si+1];
+      let nd={...d,gameDate:{year,season,day},todaySlots:0,plots:newPlots};
+      nd=iSS(nd);
+      nd=checkEggFlags(nd);
+      nd=checkHiddenUnlocks(nd);
+      return nd;
+    }
+    return {...d,gameDate:{year,season,day},todaySlots:0,npcGiftedToday:{Kim:false,Lucas:false,Leon:false,Ethan:false}};
+  });
+
+  const plant=(pi,ci)=>{setD(d=>{const ns={...d.seeds};if(!ns[ci])return d;ns[ci]-=1;if(!ns[ci])delete ns[ci];const np=[...d.plots];np[pi]={crop:ci,fed:{w:0,s:0,f:0,m:0,o:0}};return {...d,seeds:ns,plots:np};});setMdl(null);};
+  const water=(pi)=>setD(d=>{const p=d.plots[pi];if(!p.crop)return d;const c=gc(p.crop);const nn={...d.nutrients};const nf={...p.fed};let ok=false;NK.forEach(k=>{const need=c[k]-(nf[k]||0);const ci=NM[k];if(need>0&&nn[ci]>0){const g=Math.min(need,nn[ci]);nf[k]=(nf[k]||0)+g;nn[ci]-=g;ok=true;}});if(!ok)return d;const np=[...d.plots];np[pi]={...p,fed:nf};return {...d,nutrients:nn,plots:np};});
+
+  const harvest=(pi)=>{setD(d=>{
+    const p=d.plots[pi];if(!p.crop)return d;
+    const c=gc(p.crop);if(!NK.every(k=>(p.fed[k]||0)>=c[k]))return d;
+    const nc={...d.crops};nc[c.id]=(nc[c.id]||0)+1;
+    const ncol={...d.col};ncol[c.id]=true;
+    const ns={...d.seeds};if(Math.random()<(RET[c.r]||0))ns[c.id]=(ns[c.id]||0)+1;
+    const np=[...d.plots];np[pi]={crop:null};
+    // NPC heart: harvesting NPC crops gives hearts (simulate)
+    const npcH={...(d.npcHearts||{Kim:0,Lucas:0,Leon:0,Ethan:0})};
+    if(c.id==="h_npc_kim") npcH.Kim=Math.min(10,npcH.Kim+1);
+    if(c.id==="h_npc_lucas") npcH.Lucas=Math.min(10,npcH.Lucas+1);
+    if(c.id==="h_npc_leon") npcH.Leon=Math.min(10,npcH.Leon+1);
+    if(c.id==="h_npc_ethan") npcH.Ethan=Math.min(10,npcH.Ethan+1);
+    let nd={...d,crops:nc,seeds:ns,col:ncol,plots:np,npcHearts:npcH};
+    nd=checkEggFlags(nd);nd=checkHiddenUnlocks(nd);
+    return nd;
+  });setSP(null);};
+
+  const sellC=(ci)=>setD(d=>{
+    const c=gc(ci);if(!d.crops[ci]||c.nosell)return d;
+    const nc={...d.crops};nc[ci]-=1;if(!nc[ci])delete nc[ci];
+    let nd={...d,crops:nc,gold:d.gold+c.sell,totalGoldEarned:(d.totalGoldEarned||0)+c.sell};
+    nd=checkEggFlags(nd);nd=checkHiddenUnlocks(nd);
+    return nd;
+  });
+  const buyS=(ci)=>setD(d=>{const c=gc(ci);if(d.gold<c.cost)return d;const ns={...d.seeds};ns[ci]=(ns[ci]||0)+1;const nss={...d.shopStock};if(c.stk){if((nss[ci]||0)<=0)return d;nss[ci]-=1;}return {...d,seeds:ns,gold:d.gold-c.cost,shopStock:nss};});
+
+  const addNpcHeart=(npc)=>setD(d=>{
+    const npcH={...(d.npcHearts||{Kim:0,Lucas:0,Leon:0,Ethan:0})};
+    npcH[npc]=Math.min(10,npcH[npc]+1);
+    let nd={...d,npcHearts:npcH};
+    nd=checkEggFlags(nd);nd=checkHiddenUnlocks(nd);
+    // give seed if newly unlocked
+    const newSeeds={...nd.seeds};
+    HIDDEN_CROPS.filter(hc=>hc.unlock.type==="npc"&&hc.unlock.npc===npc).forEach(hc=>{
+      if(nd.unlockedHidden[hc.id]&&!d.unlockedHidden[hc.id]){newSeeds[hc.id]=(newSeeds[hc.id]||0)+1;}
+    });
+    return {...nd,seeds:newSeeds};
+  });
+
+  // NPC: talk to NPC
+  const talkNPC = (npcId) => {
+    const npc = NPCS.find(n=>n.id===npcId);
+    const hearts = Math.floor(D.npcHearts?.[npcId]||0);
+    const tier = Math.min(10, hearts);
+    const lines = npc.dialogues[tier] || npc.dialogues[0];
+    const line = lines[Math.floor(Math.random()*lines.length)];
+    // Ethan tip chance
+    if(npcId==="Ethan" && npc.advice && Math.random()<0.33) {
+      const tip = npc.advice[Math.floor(Math.random()*npc.advice.length)];
+      setEthanTip(tip);
+    } else {
+      setEthanTip(null);
+    }
+    setNpcMsg({npc:npcId,text:line,type:"talk"});
+    // small heart gain for talking (once per day vibe - no hard lock for now)
+  };
+
+  // NPC: give gift
+  const giveGift = (npcId, cropId) => {
+    const npc = NPCS.find(n=>n.id===npcId);
+    const c = gc(cropId);
+    if(!c || !(D.crops[cropId]>0)) return;
+    let reaction = "normal";
+    if(npc.loveItems.includes(cropId)) reaction = "love";
+    else if(npc.hateItems.includes(cropId)) reaction = "hate";
+    else if(c.r==="rare"||c.r==="epic"||c.r==="legend") reaction = "like";
+    const lines = npc.giftDialogue[reaction]||npc.giftDialogue.normal||["……谢谢。"];
+    const line = lines.length ? lines[Math.floor(Math.random()*lines.length)] : "……谢谢。";
+    let heartGain = NPC_GIFT_HEART[reaction]||1;
+    // Kim slow mechanic
+    if(npcId==="Kim" && (D.npcHearts?.Kim||0) < KIM_SLOW_THRESHOLD) heartGain = Math.max(0, Math.floor(heartGain*0.5));
+    // Lucas love bonus
+    if(npcId==="Lucas" && reaction==="love") heartGain += 1;
+    setD(d=>{
+      const nh={...(d.npcHearts||{})};
+      nh[npcId]=Math.max(0,Math.min(10,(nh[npcId]||0)+heartGain));
+      const nc={...d.crops};
+      nc[cropId]-=1; if(!nc[cropId]) delete nc[cropId];
+      const gifted={...(d.npcGiftedToday||{})};
+      gifted[npcId]=true;
+      let nd={...d,npcHearts:nh,crops:nc,npcGiftedToday:gifted};
+      nd=checkHiddenUnlocks(nd);
+      const newSeeds={...nd.seeds};
+      HIDDEN_CROPS.filter(hc=>hc.unlock.type==="npc"&&hc.unlock.npc===npcId).forEach(hc=>{
+        if(nd.unlockedHidden[hc.id]&&!d.unlockedHidden[hc.id]){newSeeds[hc.id]=(newSeeds[hc.id]||0)+1;}
+      });
+      return {...nd,seeds:newSeeds};
+    });
+    setNpcMsg({npc:npcId,text:line,type:"gift",reaction,heartGain});
+    setNpcGiftModal(null);
+  };
+
+  // Lucas task check
+  const checkLucasTask = () => {
+    const taskIdx = D.lucasTaskIdx||0;
+    const task = NPCS.find(n=>n.id==="Lucas")?.tasks?.[taskIdx % 5];
+    if(!task) return;
+    if(task.check(D)) {
+      setD(d=>{
+        const nh={...(d.npcHearts||{})};
+        nh.Lucas=Math.min(10,(nh.Lucas||0)+task.reward);
+        return {...d,npcHearts:nh,lucasTaskIdx:(d.lucasTaskIdx||0)+1,lucasTaskDone:true};
+      });
+      setNpcMsg({npc:"Lucas",text:"不错嘛，你真的做到了。好感+"+task.reward+" ✨",type:"task_done"});
+    } else {
+      setNpcMsg({npc:"Lucas",text:"任务："+task.desc,type:"task_show"});
+    }
+  };
+
+  const expS=()=>{const b=new Blob([JSON.stringify(D,null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="mibao_"+td()+".json";a.click();URL.revokeObjectURL(u);};
+  const impS=()=>{const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{setD({...DEF(),...JSON.parse(ev.target.result)});}catch(e){alert("格式错误");}};r.readAsText(f);};i.click();};
+
+  const totalCrops=ALL_CROPS.length;
+  const colCount=Object.keys(D.col).length;
+  const colP=Math.round(colCount/totalCrops*100);
+  const maxPlots=colP>=100?16:colP>=80?12:colP>=60?10:colP>=40?8:colP>=20?6:4;
+  useEffect(()=>{
+    setD(d=>{
+      if(d.plots.length<maxPlots){const np=[...d.plots];while(np.length<maxPlots)np.push({crop:null});return {...d,plots:np};}
+      return d;
+    });
+  },[maxPlots]);
+
+  const dT=tM==="countdown"?fmt(Math.max(0,tMin*60-el)):fmt(el);
+  const cS=Math.floor(el/60/15);
+  const cC=CATS.find(c=>c.id===cat);
+  const gd=D.gameDate;
+  const mySd=Object.entries(D.seeds).filter(([,v])=>v>0);
+  const myCr=Object.entries(D.crops).filter(([,v])=>v>0);
+  const sCrops=CROPS.filter(c=>c.se===gd.season);
+  const fSess=fC==="all"?D.sessions:D.sessions.filter(s=>s.cat===fC);
+
+  // Hidden crops display
+  const unlockedHiddenList=HIDDEN_CROPS.filter(hc=>D.unlockedHidden[hc.id]);
+  const lockedHiddenList=HIDDEN_CROPS.filter(hc=>!D.unlockedHidden[hc.id]);
+  const streakHidden=HIDDEN_CROPS.filter(hc=>hc.unlock.type==="streak");
+  const npcHidden=HIDDEN_CROPS.filter(hc=>hc.unlock.type==="npc");
+  const eggHidden=HIDDEN_CROPS.filter(hc=>hc.unlock.type==="egg");
+
+  const npcColors={Kim:"#7E57C2",Lucas:"#E8A838",Leon:"#E8A838",Ethan:"#E57373"};
+  const npcBgs={Kim:"#F3E5F5",Lucas:"#FFF8E1",Leon:"#FFF3E0",Ethan:"#FFEBEE"};
+
+  return (
+    <div style={{minHeight:"100vh",background:"#2d1b0e",fontFamily:"'Press Start 2P',monospace",color:"#f0d8a0",paddingBottom:72,position:"relative",overflow:"hidden"}}>
+      <style>{`
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* ── Base colours ── */
+:root{
+  --soil:#3b2010;--soil2:#4a2c14;--wood:#6b3e1e;--wood2:#8b5a2b;
+  --gold:#f0c040;--gold2:#e0a820;--cream:#f5e8c0;--parchment:#ede0b0;
+  --green:#4a8c3f;--green2:#2d5a24;--red:#c03020;--red2:#8b1a10;
+  --blue:#2060a0;--blue2:#104070;--purple:#6040a0;--purple2:#3a2060;
+  --border:#1a0c04;--shadow:#0a0604;
+  --panel:rgba(43,22,8,0.97);
+}
+
+/* ── Pixel panel (main card) ── */
+.sv-panel{
+  background:var(--soil2);
+  border:4px solid var(--wood2);
+  outline:2px solid var(--border);
+  box-shadow:4px 4px 0 var(--shadow),inset 0 0 0 2px rgba(255,220,120,0.08);
+  border-radius:0;
+  position:relative;
+}
+.sv-panel::before{
+  content:'✦';position:absolute;top:3px;left:4px;font-size:7px;color:var(--gold2);opacity:.5;
+}
+.sv-panel::after{
+  content:'✦';position:absolute;top:3px;right:4px;font-size:7px;color:var(--gold2);opacity:.5;
+}
+
+/* ── Dialogue box ── */
+.sv-dialog{
+  background:#1a2a1a;
+  border:4px solid var(--green);
+  outline:2px solid var(--border);
+  box-shadow:4px 4px 0 var(--shadow);
+  position:relative;
+}
+.sv-dialog::before{content:'❧';position:absolute;top:4px;left:6px;font-size:8px;color:var(--green);opacity:.7;}
+.sv-dialog::after{content:'❧';position:absolute;top:4px;right:6px;font-size:8px;color:var(--green);opacity:.7;transform:scaleX(-1);}
+
+/* ── Buttons ── */
+.sv-btn{
+  font-family:'Press Start 2P',monospace;
+  background:var(--soil);
+  color:var(--cream);
+  border:3px solid var(--wood2);
+  outline:1px solid var(--border);
+  box-shadow:3px 3px 0 var(--shadow);
+  cursor:pointer;
+  border-radius:0;
+  letter-spacing:.5px;
+  transition:filter .08s;
+  text-shadow:1px 1px 0 var(--shadow);
+}
+.sv-btn:active{transform:translate(3px,3px);box-shadow:none;filter:brightness(.85);}
+.sv-btn:hover{filter:brightness(1.12);}
+
+.sv-btn-green{background:var(--green2)!important;border-color:#3a6e30!important;color:#d0f0b0!important;box-shadow:3px 3px 0 var(--shadow)!important;}
+.sv-btn-red{background:var(--red2)!important;border-color:#701010!important;color:#ffc0b0!important;box-shadow:3px 3px 0 var(--shadow)!important;}
+.sv-btn-blue{background:var(--blue2)!important;border-color:#183060!important;color:#b0d0ff!important;box-shadow:3px 3px 0 var(--shadow)!important;}
+.sv-btn-purple{background:var(--purple2)!important;border-color:#281850!important;color:#d0b8ff!important;box-shadow:3px 3px 0 var(--shadow)!important;}
+.sv-btn-gold{background:#7a5800!important;border-color:#c09020!important;color:var(--gold)!important;box-shadow:3px 3px 0 var(--shadow)!important;}
+.sv-btn-active{background:var(--green)!important;border-color:#2d6022!important;color:#fff!important;}
+
+/* ── Progress bar ── */
+.sv-bar-bg{background:#0e0804;border:2px solid var(--border);height:8px;overflow:hidden;}
+.sv-bar-fill{height:100%;transition:width .4s;}
+
+/* ── Heart display ── */
+.sv-heart{display:inline-block;font-size:12px;line-height:1;}
+
+/* ── Rarity chips ── */
+.sv-rarity{display:inline-block;padding:1px 5px;font-size:6px;border:2px solid;border-radius:0;}
+.sv-r-normal{background:#1e2a1e;color:#80c080;border-color:#3a6a3a;}
+.sv-r-rare{background:#1a2040;color:#80a8f0;border-color:#3060b0;}
+.sv-r-epic{background:#2a1840;color:#c080f0;border-color:#7040c0;}
+.sv-r-legend{background:#3a2800;color:var(--gold);border-color:var(--gold2);}
+
+/* ── Season banner ── */
+.sv-season{padding:2px 8px;font-size:7px;border:2px solid;text-shadow:1px 1px 0 #000;}
+.sv-spring{background:#3a1a28;color:#ff90b0;border-color:#c05070;}
+.sv-summer{background:#3a2a00;color:var(--gold);border-color:var(--gold2);}
+.sv-autumn{background:#3a1800;color:#f08040;border-color:#c05010;}
+.sv-winter{background:#0e2040;color:#90c8ff;border-color:#4080c0;}
+
+/* ── Bottom nav ── */
+.sv-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  display:flex;
+  background:#1a0c04;
+  border-top:4px solid var(--wood);
+  outline-top:2px solid var(--border);
+  z-index:50;
+}
+.sv-nav>button{
+  flex:1;padding:7px 2px 5px;border:none;
+  background:transparent;cursor:pointer;
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;color:#a07840;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  border-right:1px solid #2a1408;
+  transition:background .1s;
+}
+.sv-nav>button:last-child{border-right:none;}
+.sv-nav>button.sv-ac{background:#2a1408;color:var(--gold);}
+.sv-nav>button.sv-ac span:first-child{filter:drop-shadow(0 0 3px gold);}
+
+/* ── Modal overlay ── */
+.sv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;padding:14px;}
+
+/* ── Plot tile ── */
+.sv-plot{
+  aspect-ratio:1;
+  border:3px solid var(--wood);
+  outline:1px solid var(--border);
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  background:repeating-linear-gradient(45deg,#2a1408,#2a1408 3px,#221006 3px,#221006 6px);
+  transition:filter .1s;
+}
+.sv-plot:hover{filter:brightness(1.1);}
+.sv-plot-planted{background:#1a2a0e!important;}
+.sv-plot-ready{background:#0e2808!important;box-shadow:0 0 6px #40ff40 inset!important;}
+
+/* ── Nutrient pip ── */
+.sv-pip{
+  display:inline-flex;align-items:center;gap:2px;
+  padding:2px 5px;
+  background:#0e0804;
+  border:2px solid var(--wood);
+  font-size:7px;color:var(--cream);
+}
+
+/* ── Scrollbar ── */
+*::-webkit-scrollbar{width:6px;}
+*::-webkit-scrollbar-track{background:#0e0804;}
+*::-webkit-scrollbar-thumb{background:var(--wood);border:1px solid var(--border);}
+
+/* ── Animations ── */
+@keyframes ani-idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes ani-sleep{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes ani-blink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes ani-wash{0%,100%{transform:rotate(0)}25%{transform:rotate(-15deg)}75%{transform:rotate(15deg)}}
+@keyframes ani-sad{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes ani-drop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes svglow{0%,100%{box-shadow:3px 3px 0 var(--shadow),0 0 10px rgba(80,200,80,.25)}50%{box-shadow:3px 3px 0 var(--shadow),0 0 22px rgba(80,200,80,.5)}}
+@keyframes goldpulse{0%,100%{color:var(--gold)}50%{color:#fff8c0}}
+@keyframes starfly{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-30px) scale(.3);opacity:0}}
+
+.ani-idle{animation:ani-idle 3s ease-in-out infinite}
+.ani-wash{animation:ani-wash 1s ease-in-out infinite}
+.ani-sleep{animation:ani-sleep 4s ease-in-out infinite}
+.ani-blink{animation:ani-blink 2s ease-in-out infinite}
+.ani-sad{animation:ani-sad .5s ease-in-out infinite}
+.ani-drop{animation:ani-drop .6s ease-in-out infinite}
+.sv-glow{animation:svglow 2s ease-in-out infinite}
+.gold-pulse{animation:goldpulse 1.5s ease-in-out infinite}
+
+/* ── Section heading ── */
+.sv-heading{
+  font-size:9px;color:var(--gold);
+  text-shadow:1px 1px 0 var(--shadow),0 0 8px rgba(240,192,64,.4);
+  letter-spacing:1px;
+  border-bottom:2px solid var(--wood);
+  padding-bottom:4px;margin-bottom:6px;
+}
+
+/* ── Divider ── */
+.sv-divider{border:none;border-top:2px dashed var(--wood);margin:6px 0;opacity:.5;}
+
+/* ── Tag ── */
+.sv-tag{padding:1px 5px;font-size:6px;border:2px solid;background:#0e0804;}
+      `}</style>
+
+      {/* ── HEADER ── */}
+      <div style={{padding:"8px 12px 4px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"3px solid #6b3e1e",background:"#0e0804"}}>
+        <div style={{fontSize:9,color:"#f0c040",textShadow:"1px 1px 0 #000,0 0 8px rgba(240,192,64,.5)",letterSpacing:1}}>🌾 咪宝农场</div>
+        <div className={"sv-season sv-"+gd.season}>
+          Y{gd.year} · {SN[gd.season]}季 · D{gd.day}
+        </div>
+      </div>
+
+      {/* ── NUTRIENT PIPS ── */}
+      <div style={{padding:"5px 10px",display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center",background:"#0e0804",borderBottom:"2px solid #3b2010"}}>
+        {CATS.map(c=><div key={c.id} className="sv-pip">{c.icon}<span style={{color:"#f0c040"}}>{D.nutrients[c.id]}</span></div>)}
+        <div className="sv-pip">💰<span style={{color:"#f0c040"}}>{D.gold}</span></div>
+      </div>
+
+      <div style={{padding:"8px 12px"}}>
+
+{tab==="timer"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  {/* Cat display */}
+  <div className="sv-panel" style={{padding:14,textAlign:"center",background:tS==="running"?"#0e1a0e":"#1a0c04",display:"flex",flexDirection:"column",alignItems:"center"}}>
+    <PixelCat state={mb} itemEmoji={drp?drp:null}/>
+    <div style={{fontSize:9,color:"#a0c080",marginTop:8}}>{drp?"✦ 咪宝叼回了！✦":MBT[mb]}</div>
+  </div>
+  {/* Clock */}
+  <div className={"sv-panel"+(tS==="running"?" sv-glow":"")} style={{padding:18,textAlign:"center"}}>
+    <div style={{fontSize:26,letterSpacing:4,color:tS==="running"?"#80ff80":"#f0c040",textShadow:tS==="running"?"0 0 12px #40ff40":"0 0 8px rgba(240,192,64,.5)"}}>{dT}</div>
+    {tS==="running"&&<div style={{fontSize:8,color:"#80c060",marginTop:4}}>{cC.icon} {cC.name} · {cS}滴</div>}
+    {tS==="idle"&&tM==="countdown"&&<div style={{fontSize:7,color:"#706050",marginTop:4}}>{Math.floor(tMin/15)}档 · {tMin}分钟</div>}
+    {tS==="idle"&&tM==="countup"&&<div style={{fontSize:7,color:"#706050",marginTop:4}}>正计时 · 手动停止</div>}
+  </div>
+  {tS==="idle"&&<>
+    <div style={{display:"flex",gap:5}}>
+      <button className={"sv-btn"+(tM==="countdown"?" sv-btn-active":"")} style={{flex:1,fontSize:7,padding:7}} onClick={()=>setTM("countdown")}>⏱ 倒计时</button>
+      <button className={"sv-btn"+(tM==="countup"?" sv-btn-active":"")} style={{flex:1,fontSize:7,padding:7}} onClick={()=>setTM("countup")}>⏳ 正计时</button>
+    </div>
+    {tM==="countdown"&&<div className="sv-panel" style={{padding:10}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+        <span style={{fontSize:7,color:"#a09070"}}>专注时长</span>
+        <span style={{fontSize:8,color:"#f0c040"}}>{tMin} 分</span>
+      </div>
+      <input type="range" min={15} max={180} step={15} value={tMin} onChange={e=>setTMin(+e.target.value)} style={{width:"100%",accentColor:"#f0c040"}}/>
+    </div>}
+    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+      {CATS.map(c=>{
+        const sel=cat===c.id;
+        return <button key={c.id} className="sv-btn" style={{padding:"6px 10px",fontSize:10,border:"3px solid "+(sel?"#f0c040":"#6b3e1e"),background:sel?"#3a2800":"#1a0c04",color:sel?"#f0c040":"#a09070",boxShadow:sel?"none":"2px 2px 0 #0a0604"}} onClick={()=>setCat(c.id)}>{c.icon}<span style={{fontSize:6,display:"block",marginTop:2}}>{c.name}</span></button>;
+      })}
+    </div>
+  </>}
+  <button className={"sv-btn "+(tS==="running"?"sv-btn-red":"sv-btn-green")} style={{padding:11,fontSize:8,width:"100%"}} onClick={tS==="idle"?startT:tS==="running"?stopT:()=>setSN(true)}>
+    {tS==="idle"?"✦ 开始专注 ✦":tS==="running"?"■ 结束专注":"📝 写备注"}
+  </button>
+  <div className="sv-panel" style={{padding:"7px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+    <span style={{fontSize:8}}>今日进度 <span style={{color:"#f0c040"}}>{D.todaySlots}</span><span style={{color:"#706050"}}>/6</span>{D.todaySlots>=6?" ⭐":""}</span>
+    {tS==="idle"&&D.todaySlots>0&&<button className="sv-btn sv-btn-blue" style={{fontSize:6,padding:"4px 8px"}} onClick={advDay}>🌙 入夜</button>}
+  </div>
+</div>}
+
+{tab==="farm"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+    <div className="sv-heading">🌾 农场</div>
+    <span style={{fontSize:7,color:"#706050"}}>{D.plots.filter(p=>p.crop).length}/{D.plots.length}块地</span>
+  </div>
+  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+    {D.plots.map((p,i)=>{
+      if(!p.crop) return <div key={i} className="sv-plot" onClick={()=>mySd.length?setMdl({t:"plant",p:i}):setMdl({t:"no"})}>
+        <div style={{fontSize:20,opacity:0.3,color:"#a09070"}}>＋</div>
+        <div style={{fontSize:7,color:"#504030",marginTop:2}}>空地</div>
+      </div>;
+      const c=gc(p.crop);const pr=pprog(p);const dn=pr>=1;
+      const isHidden=c&&c.hidden;
+      return <div key={i} className={"sv-plot"+(dn?" sv-plot-ready":" sv-plot-planted")} onClick={()=>setSP(i)} style={{border:"3px solid "+(isHidden?"#7040c0":dn?"#2d6022":"#4a8c3f"),outline:"1px solid #0a0604"}}>
+        <div style={{fontSize:26,filter:dn?"drop-shadow(0 0 4px #40ff40)":"none"}}>{c?c.emoji:"❓"}</div>
+        <div style={{fontSize:7,marginTop:2,color:dn?"#80ff80":isHidden?"#c080f0":"#a0c080"}}>{c?c.name.slice(0,5)+(c.name.length>5?"…":""):"未知"}</div>
+        <div className="sv-bar-bg" style={{width:"70%",marginTop:3}}><div className="sv-bar-fill" style={{width:pr*100+"%",background:dn?"#40ff40":isHidden?"#c080f0":"#80c040"}}/></div>
+        {dn&&<div style={{fontSize:6,color:"#40ff40",marginTop:1}}>✦收获✦</div>}
+        <div style={{position:"absolute",top:2,right:3,fontSize:5,color:isHidden?"#c080f0":["#80c080","#80a8f0","#c080f0","#f0c040"][["normal","rare","epic","legend"].indexOf(c?.r||"normal")]}}>{c?RN[c.r]:"?"}</div>
+        {isHidden&&<div style={{position:"absolute",top:2,left:3,fontSize:8}}>🔮</div>}
+      </div>;
+    })}
+  </div>
+  <div className="sv-panel" style={{padding:8}}>
+    <div className="sv-heading" style={{fontSize:8}}>🎒 种子 <span style={{color:"#706050",fontSize:7}}>({Object.keys(D.seeds).length}种)</span></div>
+    {mySd.length===0?<div style={{fontSize:8,color:"#706050",textAlign:"center",padding:8}}>空的 · 去商店看看</div>
+    :<div style={{display:"flex",flexWrap:"wrap",gap:3}}>{mySd.map(([id,q])=>{const c=gc(id);if(!c)return null;const ri=["normal","rare","epic","legend"].indexOf(c.r);const rCol=["#3a6a3a","#3060b0","#7040c0","#c09020"][ri];const rTxt=["#80c080","#80a8f0","#c080f0","#f0c040"][ri];return <div key={id} style={{padding:"3px 6px",background:"#0e0804",border:"2px solid "+rCol,fontSize:8,color:rTxt}}>{c.emoji}{c.name}×{q}{c.hidden?" 🔮":""}</div>;})}
+    </div>}
+  </div>
+  <div className="sv-panel" style={{padding:8}}>
+    <div className="sv-heading" style={{fontSize:8}}>📦 收获</div>
+    {myCr.length===0?<div style={{fontSize:8,color:"#706050",textAlign:"center",padding:8}}>还没有收获</div>
+    :<div style={{display:"flex",flexDirection:"column",gap:3}}>{myCr.map(([id,q])=>{const c=gc(id);if(!c)return null;const ri=["normal","rare","epic","legend"].indexOf(c.r);const rCol=["#3a6a3a","#3060b0","#7040c0","#c09020"][ri];const rTxt=["#80c080","#80a8f0","#c080f0","#f0c040"][ri];
+    return <div key={id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 7px",background:"#0e0804",border:"2px solid "+rCol}}>
+      <span style={{fontSize:9,color:rTxt}}>{c.emoji} {c.name}×{q}{c.hidden?" 🔮":""}</span>
+      {!c.nosell?<button className="sv-btn sv-btn-gold" style={{fontSize:6,padding:"3px 7px"}} onClick={()=>sellC(id)}>💰{c.sell}</button>:<span style={{fontSize:6,color:"#706050"}}>珍藏</span>}
+    </div>;})}</div>}
+  </div>
+</div>}
+
+{tab==="shop"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  <div style={{display:"flex",justifyContent:"space-between"}}><div className="" style={{fontSize:9,color:"#80c060"}}>🛒 商店</div><span className="" style={{fontSize:8,color:"#f0c040"}}>💰{D.gold}</span></div>
+  <div style={{display:"flex",gap:4}}>{["normal","rare"].map(r=><button key={r} className={sR===r?"sv-btn sv-btn-active":"sv-btn"} style={{flex:1,fontSize:7,padding:5}} onClick={()=>setSR(r)}>{RN[r]}</button>)}</div>
+  <div style={{display:"flex",flexDirection:"column",gap:5}}>
+    {sCrops.filter(c=>c.r===sR&&c.cost>0).map(c=>{
+      const ok=c.stk?((D.shopStock[c.id]??c.stk)>0):true;
+      const sl=c.stk?(D.shopStock[c.id]??c.stk):0;
+      const can=D.gold>=c.cost&&ok;
+      return <div key={c.id} className="sv-panel" style={{padding:8,display:"flex",alignItems:"center",opacity:ok?1:0.5}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11}}>{c.emoji} {c.name} <span style={{fontSize:7,color:RC[c.r]}}>({RN[c.r]})</span></div>
+          <div style={{fontSize:8,color:"#706050",marginTop:1}}>{c.desc}</div>
+          <div style={{fontSize:7,color:"#a09070",marginTop:2}}>{NK.map(k=>c[k]>0?NI[k]+c[k]+" ":null)}· 卖{c.sell}金</div>
+          {c.stk!=null&&<div style={{fontSize:7,color:"#f0c040",marginTop:1}}>库存{sl}</div>}
+        </div>
+        <button className={can?"bt bb":"bt"} style={{fontSize:7,padding:"5px 8px",marginLeft:6,opacity:can?1:0.4}} onClick={()=>can&&buyS(c.id)} disabled={!can}>{c.cost}金</button>
+      </div>;
+    })}
+  </div>
+</div>}
+
+{tab==="hidden"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+    <div className="" style={{fontSize:9,color:"#c080f0"}}>🔮 隐藏图鉴</div>
+    <span style={{fontSize:8,color:"#706050"}}>{unlockedHiddenList.length}/{HIDDEN_CROPS.length}</span>
+  </div>
+
+  <div style={{display:"flex",gap:3}}>
+    {[{k:"streak",l:"打卡线"},{k:"npc",l:"NPC"},{k:"egg",l:"彩蛋"}].map(t=><button key={t.k} className={hTab===t.k?"sv-btn sv-btn-active":"sv-btn"} style={{flex:1,fontSize:6,padding:5}} onClick={()=>setHTab(t.k)}>{t.l}</button>)}
+  </div>
+
+  {hTab==="streak"&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
+    {CATS.map(cat=>{
+      const catKey=CAT_KEY[cat.id];
+      const catStreakCrops=streakHidden.filter(hc=>hc.unlock.cat===cat.id);
+      return <div key={cat.id} className="sv-panel" style={{padding:8}}>
+        <div style={{fontSize:10,color:cat.color,marginBottom:5,borderBottom:"2px dashed "+cat.color,paddingBottom:4}}>
+          {cat.icon} {cat.name} 连续打卡
+          <span style={{fontSize:8,marginLeft:6,color:"#a09070"}}>当前{D.streaks[cat.id]||0}天</span>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+          {catStreakCrops.map(hc=>{
+            const unlocked=D.unlockedHidden[hc.id];
+            const progress=Math.min(1,(D.streaks[cat.id]||0)/hc.unlock.days);
+            return <div key={hc.id} style={{padding:"6px 8px",background:unlocked?RBG[hc.r]:"#1A1A2E",border:"2px solid "+(unlocked?RC[hc.r]:"#444"),borderRadius:2,position:"relative",overflow:"hidden"}}>
+              {!unlocked&&<div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(45deg,rgba(0,0,0,0.3),rgba(0,0,0,0.3) 4px,transparent 4px,transparent 8px)"}}/>}
+              <div style={{display:"flex",alignItems:"center",gap:6,position:"relative"}}>
+                <div style={{fontSize:22,filter:unlocked?"none":"grayscale(1) brightness(0.3)"}}>{hc.emoji}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:10,color:unlocked?"#3E2723":"#888"}}>{unlocked?hc.name:"???"}</div>
+                  <div style={{fontSize:7,color:unlocked?RC[hc.r]:"#666",marginTop:1}}>{RN[hc.r]} · 需连续{hc.unlock.days}天</div>
+                  {unlocked&&<div style={{fontSize:8,color:"#a09070",marginTop:2,lineHeight:1.4}}>{hc.desc}</div>}
+                  <div style={{width:"100%",height:4,background:"#333",borderRadius:2,overflow:"hidden",marginTop:3}}>
+                    <div style={{height:"100%",width:progress*100+"%",background:unlocked?"#4CAF50":cat.color,transition:"width 0.5s"}}/>
+                  </div>
+                  {!unlocked&&<div style={{fontSize:6,color:"#666",marginTop:1}}>{D.streaks[cat.id]||0}/{hc.unlock.days}天</div>}
+                  {unlocked&&<div style={{fontSize:7,color:"#40ff80",marginTop:1}}>✅ 已解锁{D.seeds[hc.id]||D.crops[hc.id]?` · 库存${(D.seeds[hc.id]||0)+(D.crops[hc.id]||0)}`:" · 已用完"}</div>}
+                </div>
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>;
+    })}
+  </div>}
+
+  {hTab==="npc"&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
+    <div className="sv-panel" style={{padding:8}}>
+      <div style={{fontSize:9,color:"#a09070",marginBottom:6}}>💝 NPC好感度</div>
+      {["Kim","Lucas","Leon","Ethan"].map(npc=>{
+        const hearts=D.npcHearts?.[npc]||0;
+        const hc=npcHidden.find(h=>h.unlock.npc===npc);
+        const unlocked=hc&&D.unlockedHidden[hc.id];
+        return <div key={npc} style={{marginBottom:8,padding:"6px 8px",background:'#1a1208',border:"2px solid #6b3e1e",borderRadius:2}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <span style={{fontSize:10,color:npcColors[npc]}}>{npc}</span>
+            <div style={{display:"flex",gap:2}}>
+              {Array(10).fill(0).map((_,i)=><span key={i} style={{fontSize:10,opacity:i<hearts?1:0.2}}>♥</span>)}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+            <button className="sv-btn" style={{fontSize:6,padding:"3px 7px"}} onClick={()=>addNpcHeart(npc)}>+好感💝</button>
+            {unlocked?<span style={{fontSize:8,color:"#40ff80"}}>✅ 种子已获得</span>:<span style={{fontSize:7,color:"#706050"}}>5心解锁专属种子</span>}
+          </div>
+          {hc&&unlocked&&<div style={{marginTop:4,fontSize:8,color:"#a09070",lineHeight:1.4}}>{hc.emoji} {hc.name} — {hc.desc.slice(0,30)}…</div>}
+        </div>;
+      })}
+    </div>
+
+    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+      {npcHidden.map(hc=>{
+        const unlocked=D.unlockedHidden[hc.id];
+        return <div key={hc.id} style={{padding:"6px 8px",background:unlocked?RBG[hc.r]:"#1A1A2E",border:"2px solid "+(unlocked?"#AB47BC":"#444"),borderRadius:2}}>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <div style={{fontSize:22,filter:unlocked?"none":"grayscale(1) brightness(0.2)"}}>{hc.emoji}</div>
+            <div>
+              <div style={{fontSize:9,color:unlocked?"#3E2723":"#888"}}>{unlocked?hc.name:"???.????"} <span style={{fontSize:7,color:"#c080f0"}}>{unlocked?"("+hc.unlock.npc+"专属)":""}</span></div>
+              {unlocked&&<div style={{fontSize:8,color:"#a09070",marginTop:2,lineHeight:1.4}}>{hc.desc}</div>}
+              {!unlocked&&<div style={{fontSize:7,color:"#666",marginTop:1}}>与{hc.unlock.npc}达到5心后解锁</div>}
+            </div>
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>}
+
+  {hTab==="egg"&&<div style={{display:"flex",flexDirection:"column",gap:4}}>
+    {eggHidden.map(hc=>{
+      const unlocked=D.unlockedHidden[hc.id];
+      const condMap={
+        rainbow:"一天内集齐五种养分各≥3滴",
+        first_legend:"第一次种出任意传说作物",
+        season_complete:"集齐当季全部普通作物图鉴",
+        "60min_7days":"连续7天每天≥60分钟专注",
+        all_npc:"四个NPC全部达到5心",
+        gold_10000:"累计金币达到10000",
+        col_50:"图鉴完成度达到50%",
+        one_year:"游戏内度过完整一年（四季）"
+      };
+      const cond=condMap[hc.unlock.key]||"???";
+      const achieved=D.eggFlags&&D.eggFlags[hc.unlock.key];
+      return <div key={hc.id} style={{padding:"8px 10px",background:unlocked?RBG[hc.r]:achieved?"#1A2A1A":"#1A1A2E",border:"2px solid "+(unlocked?RC[hc.r]:achieved?"#4CAF50":"#444"),borderRadius:2,position:"relative"}}>
+        <div style={{display:"flex",gap:6,alignItems:"flex-start"}}>
+          <div style={{fontSize:22,filter:unlocked?"none":"grayscale(1) brightness(0.25)"}}>{hc.emoji}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:9,color:unlocked?"#3E2723":achieved?"#81C784":"#888"}}>
+              {unlocked?hc.name:"???"}
+              {unlocked&&<span style={{fontSize:6,marginLeft:4,color:RC[hc.r]}}>{RN[hc.r]}</span>}
+            </div>
+            <div style={{fontSize:7,color:unlocked?"#795548":achieved?"#66BB6A":"#666",marginTop:2,lineHeight:1.5}}>
+              {unlocked?hc.desc:cond}
+            </div>
+            {achieved&&!unlocked&&<div style={{fontSize:7,color:"#40ff80",marginTop:2}}>🌟 条件已满足，完成一次专注即可获得</div>}
+            {unlocked&&<div style={{fontSize:7,color:"#40ff80",marginTop:2}}>✅ 彩蛋已解锁</div>}
+          </div>
+        </div>
+      </div>;
+    })}
+  </div>}
+</div>}
+
+{tab==="village"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  <div className="" style={{fontSize:9,color:"#80c060"}}>🏘 村民</div>
+
+  {!selNPC && <div style={{display:"flex",flexDirection:"column",gap:6}}>
+    {NPCS.map(npc=>{
+      const hearts=D.npcHearts?.[npc.id]||0;
+      const tier=Math.floor(hearts);
+      const gifted=D.npcGiftedToday?.[npc.id];
+      const isKimSlow=npc.id==="Kim"&&tier<KIM_SLOW_THRESHOLD;
+      return <div key={npc.id} className="sv-panel" style={{padding:10,cursor:"pointer",border:"3px solid "+npc.color,background:"#1a0c04"}} onClick={()=>setSelNPC(npc.id)}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <PixelNPC npcId={npc.id} size={4}/>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+              <span style={{fontSize:11,color:npc.color}}>{npc.name}</span>
+              <span style={{fontSize:7,color:"#706050"}}>{npc.tribe} · {npc.job}</span>
+            </div>
+            <div style={{display:"flex",gap:1,margin:"4px 0"}}>
+              {Array(10).fill(0).map((_,i)=><span key={i} style={{fontSize:11,color:i<tier?npc.color:"#3a2010",lineHeight:1}}>{i<tier?"♥":"♡"}</span>)}
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:7,color:"#706050"}}>{npc.location}</span>
+              <div style={{display:"flex",gap:3}}>
+                {gifted&&<span style={{fontSize:6,color:"#706050",background:"#0e0804",padding:"1px 4px",border:"1px solid #3a2010"}}>今日已送礼</span>}
+                {isKimSlow&&<span style={{fontSize:6,color:npc.color,padding:"1px 4px",border:"1px solid "+npc.color}}>谨慎</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>;
+    })}
+  </div>}
+
+  {selNPC&&(()=>{
+    const npc=NPCS.find(n=>n.id===selNPC);
+    const hearts=D.npcHearts?.[npc.id]||0;
+    const tier=Math.floor(hearts);
+    const gifted=D.npcGiftedToday?.[npc.id];
+    const task=npc.tasks?.[((D.lucasTaskIdx||0))%5];
+    const isKimSlow=npc.id==="Kim"&&tier<KIM_SLOW_THRESHOLD;
+    return <div style={{display:"flex",flexDirection:"column",gap:7}}>
+      <button className="sv-btn" style={{fontSize:7,padding:"4px 10px",alignSelf:"flex-start"}} onClick={()=>{setSelNPC(null);setNpcMsg(null);setEthanTip(null);}}>← 返回</button>
+
+      {/* NPC Header */}
+      <div className="sv-panel" style={{padding:12,border:"3px solid "+npc.color,background:"#0e0804"}}>
+        <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+          <PixelNPC npcId={npc.id} size={5}/>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,color:npc.color,textShadow:"1px 1px 0 #000",marginBottom:2}}>{npc.name}</div>
+            <div style={{fontSize:7,color:"#a09070"}}>{npc.tribe} · {npc.job}</div>
+            <div style={{fontSize:7,color:"#706050",marginBottom:4}}>{npc.location}</div>
+            <div style={{display:"flex",gap:1,marginTop:4}}>
+              {Array(10).fill(0).map((_,i)=><span key={i} style={{fontSize:13,color:i<tier?npc.color:"#2a1408"}}>{i<tier?"♥":"♡"}</span>)}
+            </div>
+            <div style={{fontSize:7,color:isKimSlow?npc.color:"#706050",marginTop:2}}>
+              {tier}/10心{isKimSlow?" · 他需要更多时间建立信任":""}
+            </div>
+          </div>
+        </div>
+        <div className="sv-bar-bg" style={{marginTop:8}}>
+          <div className="sv-bar-fill" style={{width:(hearts/10*100)+"%",background:npc.color}}/>
+        </div>
+      </div>
+
+      {/* Dialogue box */}
+      {npcMsg&&npcMsg.npc===selNPC&&<div className="sv-dialog" style={{padding:"10px 14px"}}>
+        <div style={{fontSize:8,color:npc.color,marginBottom:5,paddingLeft:14}}>{npc.name} :</div>
+        <div style={{fontSize:10,lineHeight:1.8,color:"#f0e8c0",paddingLeft:14}}>{npcMsg.text}</div>
+        {npcMsg.type==="gift"&&<div style={{fontSize:8,marginTop:5,paddingLeft:14,color:npcMsg.reaction==="love"?"#f0c040":npcMsg.reaction==="hate"?"#ff6060":"#80c060"}}>
+          {npcMsg.reaction==="love"?"♥ 非常喜欢！":npcMsg.reaction==="hate"?"✗ 不喜欢…":npcMsg.reaction==="like"?"✓ 还不错":""} {npcMsg.heartGain>0?"+"+npcMsg.heartGain+"♥":npcMsg.heartGain<0?npcMsg.heartGain+"♥":""}
+        </div>}
+        {ethanTip&&npc.id==="Ethan"&&<div style={{marginTop:6,padding:"6px 10px",background:"#0e1a0e",border:"2px solid #4a8c3f",fontSize:8,color:"#80c060",lineHeight:1.6}}>
+          🌿 种植建议：{ethanTip}
+        </div>}
+      </div>}
+
+      {/* Special: Kim 5心提示 */}
+      {npc.id==="Kim"&&tier>=5&&tier<6&&<div style={{padding:"6px 10px",background:"#E8EAF6",border:"2px solid #5C6BC0",borderRadius:2,fontSize:9,color:"#3949AB",lineHeight:1.5}}>
+        🐺 Kim开始主动出现在你农场附近了……
+      </div>}
+
+      {/* Actions */}
+      <div style={{display:"flex",gap:5}}>
+        <button className="sv-btn" style={{flex:1,fontSize:7,padding:7,borderColor:npc.color,color:npc.color2}} onClick={()=>talkNPC(npc.id)}>
+          💬 打招呼
+        </button>
+        <button className={gifted?"sv-btn":"sv-btn sv-btn-green"} style={{flex:1,fontSize:7,padding:7,opacity:gifted?0.5:1}} onClick={()=>{if(!gifted)setNpcGiftModal(npc.id);}}>
+          🎁 {gifted?"今日已送":"送礼物"}
+        </button>
+        {npc.id==="Lucas"&&<button className="sv-btn" style={{flex:1,fontSize:7,padding:7,borderColor:npc.color,color:npc.color2}} onClick={checkLucasTask}>
+          📋 任务
+        </button>}
+      </div>
+
+      {/* Ethan: liked/disliked crops hint */}
+      {npc.id==="Ethan"&&<div className="sv-panel" style={{padding:7,fontSize:8,color:"#a09070",lineHeight:1.8}}>
+        <div>🌱 Ethan喜欢：春季多属性作物</div>
+        <div>❌ 不喜欢：单属性普通作物</div>
+      </div>}
+
+      {/* Lucas task display */}
+      {npc.id==="Lucas"&&task&&<div className="sv-panel" style={{padding:8,border:"2px dashed "+npc.color}}>
+        <div style={{fontSize:8,color:npc.color2,marginBottom:2}}>📋 当前任务</div>
+        <div style={{fontSize:9,color:"#f0d8a0"}}>{task.desc}</div>
+        <div style={{fontSize:7,color:"#706050",marginTop:1}}>完成奖励 +{task.reward}♥</div>
+      </div>}
+
+      {/* Like/dislike summary */}
+      <div className="sv-panel" style={{padding:8}}>
+        <div style={{fontSize:8,color:"#a09070",marginBottom:4}}>💝 喜好</div>
+        <div style={{fontSize:8,lineHeight:1.8}}>
+          <div>最爱：{npc.loveItems.slice(0,3).map(id=>{const c=gc(id);return c?c.emoji+c.name+" ":"";})} </div>
+          <div>偏好季节：{npc.loveSeasons.map(s=>SN[s]).join("·")}季</div>
+          {npc.hateItems.length>0&&<div style={{color:"#706050"}}>不喜欢：{npc.hateItems.map(id=>{const c=gc(id);return c?c.emoji+" ":"";})}甜腻或粗糙的作物</div>}
+        </div>
+      </div>
+    </div>;
+  })()}
+</div>}
+
+{tab==="records"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  <div className="" style={{fontSize:9,color:"#80c060"}}>📋 记录</div>
+  <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+    <button className={fC==="all"?"sv-btn sv-btn-active":"sv-btn"} style={{fontSize:6,padding:"3px 6px"}} onClick={()=>setFC("all")}>全部</button>
+    {CATS.map(c=><button key={c.id} className={fC===c.id?"sv-btn sv-btn-active":"sv-btn"} style={{fontSize:6,padding:"3px 6px"}} onClick={()=>setFC(c.id)}>{c.icon}</button>)}
+  </div>
+  <div className="sv-panel" style={{maxHeight:"42vh",overflow:"auto"}}>
+    {fSess.length===0?<div style={{padding:16,textAlign:"center",color:"#706050",fontSize:10}}>还没有记录🌱</div>
+    :fSess.map(s=><div key={s.id} style={{padding:8,borderBottom:"2px dashed #3b2010"}}>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:10}}><span>{s.ci}{s.cn}</span><span className="" style={{fontSize:6,color:"#706050"}}>Y{s.gd.year}{SN[s.gd.season]}D{s.gd.day}</span></div>
+      <div style={{fontSize:9,color:"#a09070"}}>{s.dur}分·{s.slots}滴·{new Date(s.rd).toLocaleDateString("zh-CN",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</div>
+      {s.sn&&<div style={{fontSize:9,color:"#80c060"}}>🐱{s.sn}</div>}
+      {s.note&&<div style={{fontSize:10,background:"#2a1c08",padding:"5px 7px",borderLeft:"3px solid #f0c040",marginTop:3,lineHeight:1.5}}>{s.note}</div>}
+    </div>)}
+  </div>
+  <div className="sv-panel" style={{padding:8}}>
+    <div style={{fontSize:9,color:"#a09070",marginBottom:4}}>🔥 连续打卡</div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{CATS.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:2,padding:"2px 6px",background:c.bg,border:"2px solid "+c.color,borderRadius:2,fontSize:9}}>{c.icon}<span className="" style={{fontSize:7}}>{D.streaks[c.id]}天</span></div>)}</div>
+  </div>
+</div>}
+
+{tab==="settings"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+  <div className="" style={{fontSize:9,color:"#80c060"}}>⚙ 设置</div>
+  <div className="sv-panel" style={{padding:10,display:"flex",flexDirection:"column",gap:6}}>
+    <button className="sv-btn" style={{fontSize:7,padding:7,width:"100%"}} onClick={expS}>💾 导出存档</button>
+    <button className="sv-btn" style={{fontSize:7,padding:7,width:"100%"}} onClick={impS}>📂 导入存档</button>
+  </div>
+  <div className="sv-panel" style={{padding:10,fontSize:9,lineHeight:2}}>
+    <div>🌾 Y{gd.year}·{SN[gd.season]}·D{gd.day}</div>
+    <div>📊 专注{D.sessions.length}次</div>
+    <div>💰 {D.gold}金 · 累计{D.totalGoldEarned||0}金</div>
+    <div>📖 普通图鉴{Math.round(Object.keys(D.col).filter(id=>!id.startsWith("h_")).length/CROPS.length*100)}%</div>
+    <div>🔮 隐藏图鉴{unlockedHiddenList.length}/{HIDDEN_CROPS.length}</div>
+    <div>🌱 田地{D.plots.length}格（下一级：普通图鉴{colP>=80?100:colP>=60?80:colP>=40?60:colP>=20?40:20}%）</div>
+    <div>💝 NPC好感：Kim{D.npcHearts?.Kim||0} Lucas{D.npcHearts?.Lucas||0} Leon{D.npcHearts?.Leon||0} Ethan{D.npcHearts?.Ethan||0}</div>
+  </div>
+  <button className="sv-btn sv-btn-red" style={{fontSize:7,padding:7,width:"100%"}} onClick={()=>{if(confirm("确定重置？")){setD(iSS(DEF()));setTS("idle");setEl(0);}}}>🗑 重置</button>
+</div>}
+
+      </div>
+
+      <div className="sv-nav">
+        {[{id:"timer",i:"⏱",l:"专注"},{id:"farm",i:"🌾",l:"农场"},{id:"shop",i:"🛒",l:"商店"},{id:"village",i:"🏘",l:"村民"},{id:"hidden",i:"🔮",l:"隐藏"},{id:"records",i:"📋",l:"记录"},{id:"settings",i:"⚙",l:"设置"}].map(t=>
+          <button key={t.id} className={tab===t.id?"sv-ac":""} onClick={()=>setTab(t.id)}><span style={{fontSize:13}}>{t.i}</span><span style={{fontSize:6}}>{t.l}</span></button>
+        )}
+      </div>
+
+{sN&&pend&&<div className="sv-overlay" onClick={e=>{if(e.target===e.currentTarget)saveSess();}}>
+  <div className="sv-panel" style={{width:"100%",maxWidth:340,padding:14,display:"flex",flexDirection:"column",gap:8}}>
+    <div className="" style={{fontSize:8,color:"#80c060",textAlign:"center"}}>🌱 完成！</div>
+    <div style={{textAlign:"center",fontSize:11,lineHeight:1.8}}>
+      <div>{pend.ci}{pend.cn}·{pend.dur}分</div>
+      <div>获得<span className="" style={{fontSize:8,color:"#80c060"}}> {pend.slots}滴</span></div>
+      {pend.sn&&<div style={{color:"#f0c040"}}>🐱叼回了：{pend.sn}</div>}
+    </div>
+    <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="做了什么…" style={{width:"100%",minHeight:60,padding:7,border:"2px solid #3b2010",borderRadius:2,fontSize:11,lineHeight:1.5,resize:"vertical",fontFamily:"inherit",color:"#f0d8a0",background:"#2a1408",boxSizing:"border-box"}}/>
+    <div style={{display:"flex",gap:5}}>
+      <button className="sv-btn" style={{flex:1,fontSize:7,padding:7}} onClick={saveSess}>跳过</button>
+      <button className="sv-btn sv-btn-green" style={{flex:2,fontSize:7,padding:7}} onClick={saveSess}>✅保存</button>
+    </div>
+  </div>
+</div>}
+
+{npcGiftModal&&<div className="sv-overlay" onClick={e=>{if(e.target===e.currentTarget)setNpcGiftModal(null);}}>
+  <div className="sv-panel" style={{width:"100%",maxWidth:340,padding:14,maxHeight:"70vh",overflow:"auto"}}>
+    {(()=>{
+      const npc=NPCS.find(n=>n.id===npcGiftModal);
+      return <>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <PixelNPC npcId={npc.id} size={4}/>
+          <div style={{fontSize:8,color:npc.color}}>送礼给 {npc.name}</div>
+        </div>
+        <div style={{fontSize:7,color:"#706050",marginBottom:8}}>选择要送出的作物</div>
+        {myCr.length===0&&<div style={{fontSize:9,color:"#706050",textAlign:"center",padding:10}}>没有作物可以送</div>}
+        {myCr.map(([id,q])=>{
+          const c=gc(id);if(!c)return null;
+          const isLove=npc.loveItems.includes(id);
+          const isHate=npc.hateItems.includes(id);
+          const isLike=!isLove&&!isHate&&(c.r==="rare"||c.r==="epic"||c.r==="legend");
+          const ri=["normal","rare","epic","legend"].indexOf(c.r);
+          const rCol=["#3a6a3a","#3060b0","#7040c0","#c09020"][ri];
+          return <div key={id} className="sv-panel" style={{padding:8,marginBottom:5,cursor:"pointer",background:isLove?"#2a1a00":isHate?"#2a0808":"#0e0804",border:"2px solid "+(isLove?npc.color:isHate?"#8b1a1a":rCol)}} onClick={()=>giveGift(npcGiftModal,id)}>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:16}}>{c.emoji}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10}}>{c.name} <span style={{color:"#706050"}}>×{q}</span></div>
+                <div style={{fontSize:7,color:isLove?"#f0c040":isHate?"#ff6060":isLike?"#80a8f0":"#706050"}}>
+                  {isLove?"♥ 最爱 +3♥":isHate?"✗ 不喜欢 -1♥":isLike?"✓ 还不错 +1♥":"普通 +1♥"}
+                </div>
+              </div>
+            </div>
+          </div>;
+        })}
+        <button className="sv-btn" style={{fontSize:7,padding:6,width:"100%",marginTop:4}} onClick={()=>setNpcGiftModal(null)}>取消</button>
+      </>;
+    })()}
+  </div>
+</div>}
+
+{mdl&&mdl.t==="plant"&&<div className="sv-overlay" onClick={e=>{if(e.target===e.currentTarget)setMdl(null);}}>
+  <div className="sv-panel" style={{width:"100%",maxWidth:340,padding:14,maxHeight:"65vh",overflow:"auto"}}>
+    <div className="" style={{fontSize:8,color:"#80c060",marginBottom:8}}>🌱 选种子</div>
+    {mySd.map(([id,q])=>{const c=gc(id);return c?<div key={id} className="sv-panel" style={{padding:8,marginBottom:5,cursor:"pointer",background:c.hidden?"linear-gradient(135deg,#F3E5F5,#EDE7F6)":RBG[c.r],border:"2px solid "+(c.hidden?"#AB47BC":RC[c.r])}} onClick={()=>plant(mdl.p,id)}>
+      <div style={{fontSize:11}}>{c.emoji}{c.name} {c.hidden?"🔮":""}<span style={{color:"#706050",fontSize:8}}>×{q}</span></div>
+      <div style={{fontSize:7,color:"#a09070",marginTop:2}}>{NK.map(k=>c[k]>0?NI[k]+c[k]+" ":null)}· 总{tn(c)}滴</div>
+      {c.se!=="any"&&<div style={{fontSize:6,color:RC[c.r],marginTop:1}}>{SN[c.se]}季 · {RN[c.r]}</div>}
+      {c.se==="any"&&<div style={{fontSize:6,color:"#c080f0",marginTop:1}}>全季节 · {RN[c.r]}</div>}
+    </div>:null;})}
+    <button className="sv-btn" style={{fontSize:7,padding:6,width:"100%"}} onClick={()=>setMdl(null)}>取消</button>
+  </div>
+</div>}
+
+{mdl&&mdl.t==="no"&&<div className="sv-overlay" onClick={()=>setMdl(null)}>
+  <div className="sv-panel" style={{padding:16,textAlign:"center",maxWidth:280}}>
+    <div style={{fontSize:11,marginBottom:8}}>还没有种子</div>
+    <button className="sv-btn sv-btn-blue" style={{fontSize:7,padding:"6px 14px"}} onClick={()=>{setMdl(null);setTab("shop");}}>去商店🛒</button>
+  </div>
+</div>}
+
+{sP!==null&&D.plots[sP]&&D.plots[sP].crop&&<div className="sv-overlay" onClick={e=>{if(e.target===e.currentTarget)setSP(null);}}>
+  <div className="sv-panel" style={{width:"100%",maxWidth:340,padding:14}}>
+    {(()=>{const p=D.plots[sP];const c=gc(p.crop);const pr=pprog(p);const dn=pr>=1;
+    return <>
+      <div style={{textAlign:"center",marginBottom:8}}>
+        <div style={{fontSize:32}}>{c.emoji}</div>
+        <div style={{fontSize:12,fontWeight:"bold"}}>{c.name}{c.hidden?" 🔮":""}</div>
+        <div style={{fontSize:8,color:c.hidden?"#AB47BC":RC[c.r]}}>{RN[c.r]} · {c.desc}</div>
+        {c.hidden&&<div style={{fontSize:8,color:"#c080f0",marginTop:2}}>🔮 隐藏作物 · 全季节可种</div>}
+      </div>
+      <div style={{width:"100%",height:8,background:"#E0E0E0",border:"2px solid #6b3e1e",borderRadius:2,overflow:"hidden",marginBottom:8}}>
+        <div style={{height:"100%",width:pr*100+"%",background:dn?"#4CAF50":c.hidden?"#AB47BC":RC[c.r]}}/>
+      </div>
+      <div style={{fontSize:9,textAlign:"center",marginBottom:8,color:dn?"#4CAF50":"#795548"}}>{dn?"已成熟！":Math.round(pr*100)+"%"}</div>
+      <div style={{marginBottom:8}}>{NK.map(k=>{if(!c[k])return null;const fd=p.fed[k]||0;const fl=fd>=c[k];
+        return <div key={k} style={{display:"flex",alignItems:"center",gap:4,fontSize:10,marginBottom:3}}>
+          <span style={{width:20}}>{NI[k]}</span>
+          <div style={{flex:1,height:8,background:"#E0E0E0",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:Math.min(100,fd/c[k]*100)+"%",background:fl?"#4CAF50":"#FF9800"}}/></div>
+          <span style={{fontSize:8,width:40,textAlign:"right",color:fl?"#4CAF50":"#795548"}}>{fd}/{c[k]}</span>
+        </div>;})}</div>
+      <div style={{display:"flex",gap:5}}>
+        {!dn&&<button className="sv-btn sv-btn-green" style={{flex:1,fontSize:7,padding:7}} onClick={()=>water(sP)}>💧浇灌</button>}
+        {dn&&<button className="sv-btn sv-btn-green" style={{flex:1,fontSize:7,padding:7}} onClick={()=>harvest(sP)}>🌾收获</button>}
+        <button className="sv-btn" style={{fontSize:7,padding:7}} onClick={()=>setSP(null)}>关闭</button>
+      </div>
+    </>;})()}
+  </div>
+</div>}
+
+    </div>
+  );
+}
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+</body>
+</html>
