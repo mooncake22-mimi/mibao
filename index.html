@@ -14,7 +14,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #2d1b0e; overflow-x: hidden; }
     #root { min-height: 100vh; }
-    /* iOS safe area */
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       #root { padding-bottom: env(safe-area-inset-bottom); }
     }
@@ -22,7 +21,6 @@
 </head>
 <body>
   <div id="root"></div>
-  <!-- React + Babel via CDN -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -538,9 +536,10 @@ export default function App() {
 
   const startT = () => { setTS("running");setEl(0);setMb("washing");setTimeout(()=>setMb(p=>p==="washing"?"sleeping":p),60000); };
 
-  const stopT = useCallback(()=>{
+  const stopT = useCallback((forceSecs)=>{
     clearInterval(rf.current);rf.current=null;
-    const mins=Math.floor(el/60);const slots=Math.floor(mins/15);
+    const usedSecs = forceSecs !== undefined ? forceSecs : el;
+    const mins=Math.floor(usedSecs/60);const slots=Math.floor(mins/15);
     if(slots<=0){setMb("quit");setTS("idle");setTimeout(()=>setMb("idle"),3000);return;}
     const seasonDrops=CROPS.filter(c=>(c.r==="normal"||c.r==="rare")&&c.se===D.gameDate.season);
     const crossSeasonDrops=CROPS.filter(c=>c.r==="normal"&&c.se!==D.gameDate.season);
@@ -567,7 +566,10 @@ export default function App() {
     rf.current=setInterval(()=>{
       setEl(p=>{
         const n=p+1;
-        if(tM==="countdown"&&n>=tMin*60){setTimeout(()=>stopT(),0);return tMin*60;}
+        if(tM==="countdown"&&n>=tMin*60){
+          setTimeout(()=>stopT(tMin*60),0);
+          return tMin*60;
+        }
         if(Math.floor(n/60)===3) setMb("sleeping");
         if(tM==="countdown"&&(tMin*60-n)<=120&&(tMin*60-n)>117) setMb("waking");
         return n;
